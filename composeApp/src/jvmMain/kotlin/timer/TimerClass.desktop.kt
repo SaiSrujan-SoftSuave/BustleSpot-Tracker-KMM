@@ -186,7 +186,7 @@ actual class TrackerViewModel  : ViewModel() {
     }
 
     actual fun updateTrackerTimer() {
-        trackerTime.value -= idealTime.value
+        trackerTime.value -= 480
     }
 
     actual fun startIdleTimer() {

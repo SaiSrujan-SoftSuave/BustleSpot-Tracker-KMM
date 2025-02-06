@@ -73,7 +73,6 @@ import org.koin.core.annotation.KoinExperimentalAPI
 
 data class Organization(val name: String, val logoResource: DrawableResource)
 
-@OptIn(KoinExperimentalAPI::class)
 @Composable
 fun OrganisationScreen(
     modifier: Modifier = Modifier,
@@ -123,7 +122,6 @@ fun OrganisationScreen(
                     navController.navigate(
                         route = Graph.AUTHENTICATION
                     )
-organisationViewModel.clearUiEvent()
                 }
             }
 

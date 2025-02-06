@@ -243,6 +243,7 @@ fun TrackerScreen(
                     TextButton(
                         onClick = {
                             isExitClicked = false
+                            trackerViewModel.stopTimer()
                             navController.popBackStack()
                         }
                     ) {
@@ -390,7 +391,6 @@ fun TimerSessionSection(
                 onClick = {
                     isPlaying = !isPlaying
                     if (isPlaying) {
-                        sessionManager.clearSession()
                         if (isTrackerRunning) {
                             trackerViewModel.resumeTracker()
                         } else {
