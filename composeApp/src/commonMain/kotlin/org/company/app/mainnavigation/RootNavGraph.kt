@@ -1,45 +1,40 @@
 package org.company.app.mainnavigation
 
+import org.company.app.SessionManager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import org.company.app.MainViewModel
 import org.company.app.auth.navigation.authNavGraph
 import org.company.app.auth.navigation.homeNavGraph
-import org.company.app.auth.utils.LoadingScreen
-import org.koin.compose.viewmodel.koinViewModel
-import org.koin.core.annotation.KoinExperimentalAPI
+import org.koin.compose.koinInject
 
-@OptIn(KoinExperimentalAPI::class)
+
 @Composable
 fun RootNavigationGraph(navController: NavHostController) {
-    val mainViewModel = koinViewModel<MainViewModel>()
+    val sessionManager: SessionManager = koinInject()
+    // Observe the mutable state directly
+    val isLoggedIn = sessionManager.isLoggedIn
 
-    LaunchedEffect(Unit) {
-        if (mainViewModel.isLoading.value) {
-            mainViewModel.fetchAccessToken()
+
+    LaunchedEffect(sessionManager.isLoggedIn){
+        if (!sessionManager.isLoggedIn){
+            navController.navigate(
+                route = Graph.AUTHENTICATION
+            )
         }
     }
 
-    val isLoading = mainViewModel.isLoading.collectAsState().value
-    val isLoggedIn = mainViewModel.isLoggedIn
-
-    if (isLoading) {
-        LoadingScreen()
-    } else {
-        NavHost(
-            navController = navController,
-            route = Graph.ROOT,
-            startDestination = if (isLoggedIn) Graph.HOME else Graph.AUTHENTICATION
-        ) {
-//            println(mainViewModel.accessToken.value)
-            authNavGraph(navController)
-            homeNavGraph(navController)
-        }
+    NavHost(
+        navController = navController,
+        route = Graph.ROOT,
+        startDestination = if (isLoggedIn) Graph.HOME else Graph.AUTHENTICATION
+    ) {
+        authNavGraph(navController)
+        homeNavGraph(navController)
     }
 }
+
 
 
 object Graph {

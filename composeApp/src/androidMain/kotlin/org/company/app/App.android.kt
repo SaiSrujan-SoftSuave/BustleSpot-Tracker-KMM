@@ -7,6 +7,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import org.company.app.di.initKoin
+import org.koin.android.ext.koin.androidContext
+import org.koin.android.ext.koin.androidLogger
 
 
 class AppActivity : ComponentActivity() {
@@ -15,7 +17,7 @@ class AppActivity : ComponentActivity() {
         enableEdgeToEdge()
         initKoin {
             androidLogger()
-            androidContext(this)
+            androidContext(this@AppActivity)
         }
         setContent { App() }
     }

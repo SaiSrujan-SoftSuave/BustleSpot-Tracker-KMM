@@ -57,16 +57,17 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.navigation.NavController
 import compose_multiplatform_app.composeapp.generated.resources.Res
 import compose_multiplatform_app.composeapp.generated.resources.compose_multiplatform
-
+import kotlinx.coroutines.launch
+import org.company.app.SessionManager
 import org.company.app.auth.navigation.Home
 import org.company.app.auth.utils.LoadingScreen
 import org.company.app.auth.utils.UiEvent
 import org.company.app.mainnavigation.Graph
 import org.company.app.network.models.response.Organisation
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 
@@ -83,6 +84,7 @@ fun OrganisationScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val organisationList by organisationViewModel.organisationList.collectAsState()
     val coroutineScope = rememberCoroutineScope()
+    val sessionManager: SessionManager = koinInject()
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -96,7 +98,7 @@ fun OrganisationScreen(
                 isNavigationEnabled = true,
                 isAppBarIconEnabled = true,
                 iconUserName = "Test 1"
-            ){
+            ) {
                 organisationViewModel.performLogOut()
             }
         },
@@ -112,15 +114,16 @@ fun OrganisationScreen(
                 ) {
                     OrganizationList(
                         organizations = organisationList?.listOfOrganisations,
-                        navController = navController
+                        navController = navController,
+                        sessionManager= sessionManager
                     )
                 }
 
-                if ((uiEvent as UiEvent.Success).data.isLoggingOut && (uiEvent as UiEvent.Success).data.listOfOrganisations.isEmpty() ){
+                if ((uiEvent as UiEvent.Success).data.isLoggingOut && (uiEvent as UiEvent.Success).data.listOfOrganisations.isEmpty()) {
                     navController.navigate(
                         route = Graph.AUTHENTICATION
                     )
-
+organisationViewModel.clearUiEvent()
                 }
             }
 
@@ -152,11 +155,11 @@ fun OrganisationScreen(
 }
 
 @Composable
-fun OrganizationList(organizations: List<Organisation>?, navController: NavController) {
+fun OrganizationList(organizations: List<Organisation>?, navController: NavController,sessionManager: SessionManager) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         organizations?.let {
             items(organizations) { organization ->
@@ -268,8 +271,8 @@ fun BustleSpotAppBar(
     onNavigationBackClick: () -> Unit,
     isAppBarIconEnabled: Boolean = false,
     iconUserName: String = "Demo",
-onLogOutClick: () -> Unit
-    ) {
+    onLogOutClick: () -> Unit
+) {
 
 
     CenterAlignedTopAppBar(
@@ -295,8 +298,8 @@ onLogOutClick: () -> Unit
                     modifier = Modifier.padding(end = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    AppBarIcon(username = iconUserName){
-                onLogOutClick()
+                    AppBarIcon(username = iconUserName) {
+                        onLogOutClick()
                     }
                 }
             }
@@ -322,7 +325,7 @@ fun AppBarIcon(modifier: Modifier = Modifier, username: String, onLogOutClick: (
             shape = CircleShape,
             color = Color.Red,
         ).background(color = Color.Red.copy(alpha = .3f), shape = CircleShape).clickable {
-         isMenuExpanded = !isMenuExpanded
+            isMenuExpanded = !isMenuExpanded
         },
         contentAlignment = Alignment.Center
     ) {
@@ -341,12 +344,12 @@ fun AppBarIcon(modifier: Modifier = Modifier, username: String, onLogOutClick: (
         onDismissRequest = { isMenuExpanded = false },
         modifier = Modifier.fillMaxWidth(0.8f),
         properties = PopupProperties(focusable = false)
-    ){
+    ) {
         DropdownMenuItem(
             leadingIcon = {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                    contentDescription =" TODO()",
+                    contentDescription = " TODO()",
                 )
             },
             text = {

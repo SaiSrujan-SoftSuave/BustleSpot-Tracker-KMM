@@ -72,7 +72,7 @@ class OrganisationViewModel(
                     }
 
                     is Result.Success -> {
-                       val data = result.data
+                        val data = result.data
                         _uiEvent.value = UiEvent.Success(GetAllOrganisations(
                             listOfOrganisations = emptyList(),
                             message = data.message,
@@ -84,6 +84,9 @@ class OrganisationViewModel(
 
             }
         }
+    }
+    fun clearUiEvent() {
+        _uiEvent.value = UiEvent.Success(_organisationList.value?.copy(isLoggingOut = false)!!)
     }
 
     init {

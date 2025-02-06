@@ -52,7 +52,9 @@ import org.company.app.auth.utils.LoadingScreen
 import org.company.app.auth.utils.UiEvent
 import org.company.app.mainnavigation.Graph
 import kotlinx.coroutines.launch
+import org.company.app.SessionManager
 import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 
@@ -68,6 +70,7 @@ fun LoginScreen(
     val passwordState = loginViewModel.password.collectAsState()
     val uiEvent by loginViewModel.uiEvent.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val sessionManager : SessionManager = koinInject()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -268,7 +271,7 @@ fun LoginScreen(
                 rememberCoroutineScope().launch {
                     snackbarHostState.showSnackbar("Completed Login Successfully")
                     (uiEvent as UiEvent.Success<SignInResponse>).data.access_token?.let { it1 ->
-                        mainViewModel.updateAccessToken(
+                        sessionManager.updateAccessToken(
                             it1
                         )
                     } ?: println("Token not found")

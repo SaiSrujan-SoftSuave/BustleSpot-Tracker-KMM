@@ -17,10 +17,12 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import org.company.app.SessionManager
 
 class SignOutUseCase(
     private val httpClient: HttpClient,
-    private val settings: Settings
+    private val settings: Settings,
+    private val sessionManager: SessionManager
 ){
     operator fun invoke(): Flow<Result<SignOutResponseDto>> = flow {
         try {
@@ -33,7 +35,7 @@ class SignOutUseCase(
             if (response.status == HttpStatusCode.OK) {
                 val result: SignOutResponseDto = response.body() // Deserialize the response body
                 emit(Result.Success(result))
-                settings.remove("access_token")
+                sessionManager.clearSession()
             } else {
                 emit(Result.Error("Failed to sign out: ${response.status} ${response.body<Any>()}"))
             }

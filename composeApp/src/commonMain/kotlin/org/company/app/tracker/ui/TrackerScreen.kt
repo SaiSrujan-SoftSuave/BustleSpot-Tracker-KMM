@@ -44,6 +44,7 @@ import compose_multiplatform_app.composeapp.generated.resources.ic_drop_up
 import compose_multiplatform_app.composeapp.generated.resources.ic_pause_circle
 import compose_multiplatform_app.composeapp.generated.resources.ic_play_arrow
 import compose_multiplatform_app.composeapp.generated.resources.screen
+import kotlinx.coroutines.delay
 import org.company.app.MainViewModel
 import org.company.app.auth.utils.CustomAlertDialog
 import org.company.app.auth.utils.LoadingScreen
@@ -56,8 +57,11 @@ import org.company.app.network.models.response.TaskData
 import org.company.app.organisation.ui.BustleSpotAppBar
 import org.company.app.timer.TrackerViewModel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import org.company.app.SessionManager
 import org.jetbrains.compose.resources.imageResource
 import org.jetbrains.compose.resources.painterResource
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 
@@ -89,6 +93,8 @@ fun TrackerScreen(
     var totalIdleTime by remember { mutableStateOf(0) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+
+    val sessionManager: SessionManager = koinInject()
 
     // Trigger idle dialog only when needed.
     LaunchedEffect(idleTime) {
@@ -190,7 +196,8 @@ fun TrackerScreen(
                 keyCount = keyCount,
                 mouseCount = mouseCount,
                 idleTime = totalIdleTime,
-                isTrackerRunning = isTrackerRunning
+                isTrackerRunning = isTrackerRunning,
+                sessionManager = sessionManager
             )
 
             ScreenShotSection(
@@ -359,7 +366,8 @@ fun TimerSessionSection(
     idleTime: Int,
     mouseCount: Int,
     keyCount: Int,
-    isTrackerRunning: Boolean
+    isTrackerRunning: Boolean,
+    sessionManager: SessionManager
 ) {
     // Use local state to control play/pause. Consider moving this state to the view model if needed.
     var isPlaying by remember { mutableStateOf(false) }
@@ -382,6 +390,7 @@ fun TimerSessionSection(
                 onClick = {
                     isPlaying = !isPlaying
                     if (isPlaying) {
+                        sessionManager.clearSession()
                         if (isTrackerRunning) {
                             trackerViewModel.resumeTracker()
                         } else {
