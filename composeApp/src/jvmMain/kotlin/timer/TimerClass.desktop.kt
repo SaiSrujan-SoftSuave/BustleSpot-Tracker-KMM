@@ -20,9 +20,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.random.Random
 
 
-
-actual class TrackerViewModel  : ViewModel() {
-    actual  var trackerTime: MutableStateFlow<Int> = MutableStateFlow(0)
+actual class TrackerViewModel : ViewModel() {
+    actual var trackerTime: MutableStateFlow<Int> = MutableStateFlow(0)
         get() = field
     actual var isTrackerRunning: MutableStateFlow<Boolean> = MutableStateFlow(false)
         get() = field
@@ -38,6 +37,10 @@ actual class TrackerViewModel  : ViewModel() {
     actual var mouseKeyEvents: MutableStateFlow<Int> = MutableStateFlow(0)
         get() = field
     actual var mouseMotionCount: MutableStateFlow<Int> = MutableStateFlow(0)
+        get() = field
+    actual var customeTimeForIdleTime: MutableStateFlow<Int> = MutableStateFlow(480)
+        get() = field
+    actual var numberOfScreenshot: MutableStateFlow<Int> = MutableStateFlow(1)
         get() = field
 
     private var timer = Timer()
@@ -103,7 +106,7 @@ actual class TrackerViewModel  : ViewModel() {
                 idealTime.value = 0
             }
         }
-        if (!isIdleTaskScheduled.getAndSet(true)){
+        if (!isIdleTaskScheduled.getAndSet(true)) {
             timer.scheduleAtFixedRate(object : TimerTask() {
                 override fun run() {
                     idealTime.value += 1
@@ -186,9 +189,14 @@ actual class TrackerViewModel  : ViewModel() {
     }
 
     actual fun updateTrackerTimer() {
-        trackerTime.value -= 480
+        trackerTime.value -= customeTimeForIdleTime.value
     }
 
     actual fun startIdleTimer() {
     }
+
+    actual fun addCustomTimeForIdleTime(time: Int) {
+        customeTimeForIdleTime.value = time
+    }
+
 }

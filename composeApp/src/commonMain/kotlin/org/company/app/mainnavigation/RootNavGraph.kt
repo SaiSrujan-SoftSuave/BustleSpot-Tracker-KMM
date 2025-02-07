@@ -11,7 +11,7 @@ import org.koin.compose.koinInject
 
 
 @Composable
-fun RootNavigationGraph(navController: NavHostController) {
+fun RootNavigationGraph(navController: NavHostController,onFocusReceived: () -> Unit = {}) {
     val sessionManager: SessionManager = koinInject()
     // Observe the mutable state directly
     val isLoggedIn = sessionManager.isLoggedIn
@@ -31,7 +31,7 @@ fun RootNavigationGraph(navController: NavHostController) {
         startDestination = if (isLoggedIn) Graph.HOME else Graph.AUTHENTICATION
     ) {
         authNavGraph(navController)
-        homeNavGraph(navController)
+        homeNavGraph(navController,onFocusReceived)
     }
 }
 

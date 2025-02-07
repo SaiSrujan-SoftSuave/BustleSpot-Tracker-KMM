@@ -12,9 +12,9 @@ import org.company.app.auth.forgotpassword.presentation.ForgotPasswordScreen
 import org.company.app.auth.logout.presentation.LogoutScreen
 import org.company.app.auth.signin.presentation.LoginScreen
 import org.company.app.auth.signup.presentation.SingUpScreen
-import org.company.app.tracker.ui.TrackerScreen
 import org.company.app.mainnavigation.Graph
 import org.company.app.organisation.ui.OrganisationScreen
+import org.company.app.tracker.ui.TrackerScreen
 
 
 fun NavGraphBuilder.authNavGraph(navController: NavHostController) {
@@ -40,7 +40,10 @@ fun NavGraphBuilder.authNavGraph(navController: NavHostController) {
     }
 }
 
-fun NavGraphBuilder.homeNavGraph(navController: NavHostController) {
+fun NavGraphBuilder.homeNavGraph(
+    navController: NavHostController,
+    onFocusReceived: () -> Unit = {}
+) {
     navigation(
         route = Graph.HOME,
         startDestination = Home.Organisation.route
@@ -50,16 +53,16 @@ fun NavGraphBuilder.homeNavGraph(navController: NavHostController) {
         }
         composable(
             route = "${Home.Tracker.route}/{orgId}",
-        arguments = listOf(
-            navArgument("orgId"){
-                defaultValue = "0"
-                type = NavType.StringType
-            }
-        )
-        ) {navBackStackEntry ->
+            arguments = listOf(
+                navArgument("orgId") {
+                    defaultValue = "0"
+                    type = NavType.StringType
+                }
+            )
+        ) { navBackStackEntry ->
             val orgId = navBackStackEntry.arguments?.getString("orgId")
-            orgId?.let { it->
-                TrackerScreen(navController, organisationName = it)
+            orgId?.let { it ->
+                TrackerScreen(navController, organisationName = it, onFocusReceived = onFocusReceived)
             }
 
         }

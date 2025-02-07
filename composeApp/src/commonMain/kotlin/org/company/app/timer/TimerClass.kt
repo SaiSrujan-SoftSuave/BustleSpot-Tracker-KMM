@@ -12,6 +12,14 @@ expect class TrackerViewModel() : ViewModel {
     var isTrackerRunning: MutableStateFlow<Boolean>
     var isIdealTimerRunning: MutableStateFlow<Boolean>
     val screenShotState: StateFlow<ImageBitmap?>
+    var screenShotTakenTime: MutableStateFlow<Int>
+
+    var mouseKeyEvents: MutableStateFlow<Int>
+    var keyboradKeyEvents: MutableStateFlow<Int>
+    var mouseMotionCount: MutableStateFlow<Int>
+    var customeTimeForIdleTime: MutableStateFlow<Int>
+
+    var numberOfScreenshot: MutableStateFlow<Int>
 
     fun startTimer()
     fun resetTimer()
@@ -29,9 +37,6 @@ expect class TrackerViewModel() : ViewModel {
     fun startScreenshotTask()
     fun pauseScreenshotTask()
     fun resumeScreenshotTask()
-    var screenShotTakenTime: MutableStateFlow<Int>
 
-    var mouseKeyEvents: MutableStateFlow<Int>
-    var keyboradKeyEvents: MutableStateFlow<Int>
-    var mouseMotionCount: MutableStateFlow<Int>
+    fun addCustomTimeForIdleTime(time: Int)
 }

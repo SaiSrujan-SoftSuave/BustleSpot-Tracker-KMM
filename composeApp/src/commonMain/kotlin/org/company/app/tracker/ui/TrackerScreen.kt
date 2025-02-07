@@ -2,6 +2,7 @@ package org.company.app.tracker.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -44,8 +45,9 @@ import compose_multiplatform_app.composeapp.generated.resources.ic_drop_up
 import compose_multiplatform_app.composeapp.generated.resources.ic_pause_circle
 import compose_multiplatform_app.composeapp.generated.resources.ic_play_arrow
 import compose_multiplatform_app.composeapp.generated.resources.screen
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.company.app.MainViewModel
+import org.company.app.SessionManager
 import org.company.app.auth.utils.CustomAlertDialog
 import org.company.app.auth.utils.LoadingScreen
 import org.company.app.auth.utils.Result
@@ -56,9 +58,6 @@ import org.company.app.network.models.response.Project
 import org.company.app.network.models.response.TaskData
 import org.company.app.organisation.ui.BustleSpotAppBar
 import org.company.app.timer.TrackerViewModel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import org.company.app.SessionManager
 import org.jetbrains.compose.resources.imageResource
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
@@ -70,7 +69,8 @@ import org.koin.core.annotation.KoinExperimentalAPI
 fun TrackerScreen(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    organisationName: String
+    organisationName: String,
+    onFocusReceived: () -> Unit = {}
 ) {
     val homeViewModel = koinViewModel<HomeViewModel>()
     val trackerViewModel = koinViewModel<TrackerViewModel>()
@@ -84,6 +84,8 @@ fun TrackerScreen(
     val keyCount by trackerViewModel.keyboradKeyEvents.collectAsState()
     val mouseCount by trackerViewModel.mouseKeyEvents.collectAsState()
     val screenShotTakenTime by trackerViewModel.screenShotTakenTime.collectAsState()
+    val customeTimeForIdleTime by trackerViewModel.customeTimeForIdleTime.collectAsState()
+    val numberOfScreenshot by trackerViewModel.numberOfScreenshot.collectAsState()
 
     // UI and local states
     var showIdleDialog by remember { mutableStateOf(false) }
@@ -96,7 +98,8 @@ fun TrackerScreen(
 
     // Trigger idle dialog only when needed.
     LaunchedEffect(idleTime) {
-        if (idleTime > 480 && !showIdleDialog) {
+        if (idleTime > customeTimeForIdleTime && !showIdleDialog) {
+            onFocusReceived.invoke()
             showIdleDialog = true
             trackerViewModel.stopTimer()
             trackerViewModel.updateTrackerTimer()
@@ -189,6 +192,22 @@ fun TrackerScreen(
                 lastImageTakenTime = secondsToTime(screenShotTakenTime),
                 imageBitmap = screenShotState
             )
+            Box {
+                Row {
+                    TextField(
+                        value = customeTimeForIdleTime.toString(),
+                        onValueChange = {
+                            if (it.isNotEmpty()) {
+                                trackerViewModel.addCustomTimeForIdleTime(it.toInt())
+                            } else {
+                                trackerViewModel.addCustomTimeForIdleTime(10)
+                            }
+
+                        },
+                        label = { Text("Custom Time") },
+                    )
+                }
+            }
 
             if (showIdleDialog) {
                 CustomAlertDialog(
@@ -222,8 +241,8 @@ fun TrackerScreen(
         }
         if (isExitClicked) {
             CustomAlertDialog(
-                title = "Alert",
-                text = "Do you want to stop tracker",
+                title = "Quit",
+                text = "Tracker is going to stop",
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -232,7 +251,7 @@ fun TrackerScreen(
                             navController.popBackStack()
                         }
                     ) {
-                        Text("Yes")
+                        Text("Okay")
                     }
                 },
                 dismissButton = {
@@ -241,7 +260,7 @@ fun TrackerScreen(
                             isExitClicked = false
                         }
                     ) {
-                        Text("No")
+                        Text("Cancel")
                     }
                 }
             )
@@ -508,20 +527,20 @@ fun ScreenShotSection(
 
 
 @Composable
-fun LogoutDropDown(modifier: Modifier = Modifier,onLogOutClick:() -> Unit) {
+fun LogoutDropDown(modifier: Modifier = Modifier, onLogOutClick: () -> Unit) {
     var isMenuExpanded by remember { mutableStateOf(false) }
     DropdownMenu(
         expanded = isMenuExpanded,
         onDismissRequest = { isMenuExpanded = false },
         modifier = Modifier.fillMaxWidth(0.8f),
         properties = PopupProperties(focusable = false)
-    ){
+    ) {
         DropdownMenuItem(
             leadingIcon = {
-               Icon(
-                   imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                   contentDescription =" TODO()",
-               )
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                    contentDescription = " TODO()",
+                )
             },
             text = {
                 Text(
