@@ -43,23 +43,20 @@ import androidx.navigation.NavHostController
 import compose_multiplatform_app.composeapp.generated.resources.Res
 import compose_multiplatform_app.composeapp.generated.resources.ic_bustlespot
 import compose_multiplatform_app.composeapp.generated.resources.ic_password_visible
-
+import kotlinx.coroutines.launch
 import org.company.app.MainViewModel
+import org.company.app.SessionManager
 import org.company.app.auth.navigation.AuthScreen
 import org.company.app.auth.navigation.Home
 import org.company.app.auth.signin.data.SignInResponse
 import org.company.app.auth.utils.LoadingScreen
 import org.company.app.auth.utils.UiEvent
 import org.company.app.mainnavigation.Graph
-import kotlinx.coroutines.launch
-import org.company.app.SessionManager
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 
-
-@OptIn(KoinExperimentalAPI::class)
 @Composable
 fun LoginScreen(
     navController: NavHostController
@@ -270,9 +267,9 @@ fun LoginScreen(
             is UiEvent.Success -> {
                 rememberCoroutineScope().launch {
                     snackbarHostState.showSnackbar("Completed Login Successfully")
-                    (uiEvent as UiEvent.Success<SignInResponse>).data.access_token?.let { it1 ->
+                    (uiEvent as UiEvent.Success<SignInResponse>).data.access_token?.let { newToken ->
                         sessionManager.updateAccessToken(
-                            it1
+                            newToken
                         )
                     } ?: println("Token not found")
                         mainViewModel.fetchAccessToken()

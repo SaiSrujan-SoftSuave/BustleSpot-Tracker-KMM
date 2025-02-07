@@ -21,6 +21,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class OrganisationViewModel(
@@ -31,9 +32,10 @@ class OrganisationViewModel(
     private val _organisationList : MutableStateFlow<GetAllOrganisations?> = MutableStateFlow(null)
     val organisationList: StateFlow<GetAllOrganisations?> = _organisationList
 
-
-    private val _uiEvent: MutableStateFlow<UiEvent<GetAllOrganisations>?> = MutableStateFlow(null)
-    val uiEvent: StateFlow<UiEvent<GetAllOrganisations>?> = _uiEvent
+    private val _logOutEvent : MutableStateFlow<UiEvent<SignOutResponseDto>?> = MutableStateFlow(null)
+    val logOutEvent : StateFlow<UiEvent<SignOutResponseDto>?> = _logOutEvent.asStateFlow()
+    private val _uiEvent: MutableStateFlow<UiEvent<GetAllOrganisations>> = MutableStateFlow(UiEvent.Loading)
+    val uiEvent: StateFlow<UiEvent<GetAllOrganisations>> = _uiEvent.asStateFlow()
 
 
     private fun getAllOrganisation() {
@@ -49,8 +51,8 @@ class OrganisationViewModel(
                     }
 
                     is Result.Success -> {
-                        _organisationList.value = result.data.copy(isLoggingOut = false)
-                        _uiEvent.value = UiEvent.Success(result.data.copy(isLoggingOut = false))
+                        _organisationList.value = result.data
+                        _uiEvent.value = UiEvent.Success(result.data)
                         println("Success: ${result.data}")
                     }
                 }
@@ -64,20 +66,16 @@ class OrganisationViewModel(
             signOutUseCase.invoke().collect { result ->
                 when (result) {
                     is Result.Error -> {
-                        _uiEvent.value = UiEvent.Failure(result.message ?: "Unknown Error")
+                        _logOutEvent.value = UiEvent.Failure(result.message ?: "Unknown Error")
                     }
 
                     Result.Loading -> {
-                        _uiEvent.value = UiEvent.Loading
+                        _logOutEvent.value = UiEvent.Loading
                     }
 
                     is Result.Success -> {
-                        val data = result.data
-                        _uiEvent.value = UiEvent.Success(GetAllOrganisations(
-                            listOfOrganisations = emptyList(),
-                            message = data.message,
-                            isLoggingOut = true
-                        ))
+                       val data = result.data
+                        _logOutEvent.value = UiEvent.Success(data)
                         println("Success: ${result.data}")
                     }
                 }
@@ -85,16 +83,8 @@ class OrganisationViewModel(
             }
         }
     }
-    fun clearUiEvent() {
-        _uiEvent.value = UiEvent.Success(_organisationList.value?.copy(isLoggingOut = false)!!)
-    }
 
     init {
         getAllOrganisation()
     }
 }
-//
-//sealed class OrgansitionActions{
-//    data object SignOut : OrgansitionActions
-//
-//}

@@ -55,15 +55,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
 import androidx.navigation.NavController
+import com.russhwolf.settings.Settings
 import compose_multiplatform_app.composeapp.generated.resources.Res
 import compose_multiplatform_app.composeapp.generated.resources.compose_multiplatform
 import kotlinx.coroutines.launch
-import org.company.app.SessionManager
 import org.company.app.auth.navigation.Home
 import org.company.app.auth.utils.LoadingScreen
 import org.company.app.auth.utils.UiEvent
 import org.company.app.mainnavigation.Graph
 import org.company.app.network.models.response.Organisation
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -76,14 +77,15 @@ data class Organization(val name: String, val logoResource: DrawableResource)
 @Composable
 fun OrganisationScreen(
     modifier: Modifier = Modifier,
-    navController: NavController
+    navController: NavController,
+
 ) {
     val organisationViewModel = koinViewModel<OrganisationViewModel>()
     val uiEvent by organisationViewModel.uiEvent.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val organisationList by organisationViewModel.organisationList.collectAsState()
     val coroutineScope = rememberCoroutineScope()
-    val sessionManager: SessionManager = koinInject()
+    val logOutEvent by organisationViewModel.logOutEvent.collectAsState()
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -113,14 +115,7 @@ fun OrganisationScreen(
                 ) {
                     OrganizationList(
                         organizations = organisationList?.listOfOrganisations,
-                        navController = navController,
-                        sessionManager= sessionManager
-                    )
-                }
-
-                if ((uiEvent as UiEvent.Success).data.isLoggingOut && (uiEvent as UiEvent.Success).data.listOfOrganisations.isEmpty()) {
-                    navController.navigate(
-                        route = Graph.AUTHENTICATION
+                        navController = navController
                     )
                 }
             }
@@ -149,15 +144,53 @@ fun OrganisationScreen(
                 }
             }
         }
+        when (logOutEvent) {
+            is UiEvent.Failure -> {
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(
+                        (logOutEvent as UiEvent.Failure).error,
+                        actionLabel = "Retry"
+                    )
+                }
+            }
+
+            is UiEvent.Loading -> {
+                LoadingScreen()
+            }
+
+            is UiEvent.Success -> {
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(
+                        (logOutEvent as UiEvent.Success).data.message,
+                        actionLabel = "Retry"
+                    )
+                }
+
+//                navController.navigate(
+//                    route = Graph.AUTHENTICATION
+//                ){
+//                    popUpTo(Graph.HOME){
+//                        inclusive = true
+//                    }
+//                    launchSingleTop = true
+//                }
+
+            }
+            null ->{
+
+            }
+        }
     }
+
+
 }
 
 @Composable
-fun OrganizationList(organizations: List<Organisation>?, navController: NavController,sessionManager: SessionManager) {
+fun OrganizationList(organizations: List<Organisation>?, navController: NavController) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         organizations?.let {
             items(organizations) { organization ->

@@ -9,5 +9,4 @@ data class GetAllOrganisations(
     val listOfOrganisations: List<Organisation>,
     @SerialName("message")
     val message: String,
-    val isLoggingOut :Boolean =false
 )

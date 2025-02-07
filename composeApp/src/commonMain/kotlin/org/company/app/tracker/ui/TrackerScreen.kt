@@ -72,9 +72,7 @@ fun TrackerScreen(
     modifier: Modifier = Modifier,
     organisationName: String
 ) {
-    // Get view models only once.
     val homeViewModel = koinViewModel<HomeViewModel>()
-    val mainViewModel = koinViewModel<MainViewModel>()
     val trackerViewModel = koinViewModel<TrackerViewModel>()
 
     // States from view models.
@@ -124,24 +122,11 @@ fun TrackerScreen(
                 },
                 isNavigationEnabled = true,
                 isAppBarIconEnabled = true,
-                iconUserName = "Test 1"
-            ){
-                coroutineScope.launch {
-                    mainViewModel.logOutSession().collect{result ->
-                        when(result){
-                            is Result.Error -> {
-
-                            }
-                            is Result.Loading -> {
-
-                            }
-                            is Result.Success -> {
-
-                            }
-                        }
-                    }
+                iconUserName = "Test 1",
+                onLogOutClick = {
+                    // no need to implement in tracker screen
                 }
-            }
+            )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Color.White
