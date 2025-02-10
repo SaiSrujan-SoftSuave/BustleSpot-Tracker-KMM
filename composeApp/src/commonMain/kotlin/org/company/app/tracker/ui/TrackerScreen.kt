@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -46,11 +44,9 @@ import compose_multiplatform_app.composeapp.generated.resources.ic_pause_circle
 import compose_multiplatform_app.composeapp.generated.resources.ic_play_arrow
 import compose_multiplatform_app.composeapp.generated.resources.screen
 import kotlinx.coroutines.launch
-import org.company.app.MainViewModel
 import org.company.app.SessionManager
 import org.company.app.auth.utils.CustomAlertDialog
 import org.company.app.auth.utils.LoadingScreen
-import org.company.app.auth.utils.Result
 import org.company.app.auth.utils.UiEvent
 import org.company.app.auth.utils.secondsToTime
 import org.company.app.network.models.response.DisplayItem
@@ -173,7 +169,7 @@ fun TrackerScreen(
             DropDownSelectionList(
                 title = "Task",
                 dropDownList = tasksList,
-                onItemClick = {homeViewModel.setSelectedTask(it as TaskData) },
+                onItemClick = { homeViewModel.setSelectedTask(it as TaskData) },
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
                     .padding(vertical = 8.dp),
@@ -403,7 +399,7 @@ fun TimerSessionSection(
                 onClick = {
                     isPlaying = !isPlaying
                     if (isPlaying) {
-                        if (isTrackerRunning) {
+                        if (isTrackerRunning || trackerViewModel.trackerTime.value != 0) {
                             trackerViewModel.resumeTracker()
                         } else {
                             trackerViewModel.startTimer()
