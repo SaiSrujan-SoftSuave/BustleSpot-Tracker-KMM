@@ -12,4 +12,5 @@ object APIEndpoints {
     const val GETALLTASKS = "/task/get_all_task"
 
     const val POSTACTIVITY = "/activity/create-activity"
+    const val GETALLACTIVITIES = "/activity/get-all-activity"
 }

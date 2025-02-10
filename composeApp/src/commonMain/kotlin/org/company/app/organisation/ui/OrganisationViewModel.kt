@@ -30,7 +30,7 @@ class OrganisationViewModel(
 ) : ViewModel() {
 
     private val _organisationList : MutableStateFlow<GetAllOrganisations?> = MutableStateFlow(null)
-    val organisationList: StateFlow<GetAllOrganisations?> = _organisationList
+    val organisationList: StateFlow<GetAllOrganisations?> = _organisationList.asStateFlow()
 
     private val _logOutEvent : MutableStateFlow<UiEvent<SignOutResponseDto>?> = MutableStateFlow(null)
     val logOutEvent : StateFlow<UiEvent<SignOutResponseDto>?> = _logOutEvent.asStateFlow()

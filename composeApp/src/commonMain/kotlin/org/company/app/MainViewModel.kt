@@ -1,6 +1,7 @@
 package org.company.app
 
 import androidx.lifecycle.ViewModel
+import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.Settings
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -22,7 +23,7 @@ import org.company.app.network.BASEURL
 import org.company.app.network.models.response.SignOutResponseDto
 
 class MainViewModel(
-    private val settings: Settings,
+    private val settings: ObservableSettings,
     private val httpClient: () -> HttpClient,
 ) : ViewModel() {
 

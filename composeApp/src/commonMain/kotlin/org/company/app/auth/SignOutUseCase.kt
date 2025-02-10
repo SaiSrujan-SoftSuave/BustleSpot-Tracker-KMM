@@ -1,5 +1,6 @@
 package org.company.app.auth
 
+import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.get
 import org.company.app.MainViewModel
@@ -21,7 +22,7 @@ import org.company.app.SessionManager
 
 class SignOutUseCase(
     private val httpClient: HttpClient,
-    private val settings: Settings,
+    private val settings: ObservableSettings,
     private val sessionManager: SessionManager
 ){
     operator fun invoke(): Flow<Result<SignOutResponseDto>> = flow {
@@ -29,7 +30,7 @@ class SignOutUseCase(
             emit(Result.Loading)
             val response: HttpResponse = httpClient.post("$BASEURL${APIEndpoints.SIGNOUT}") {
                 contentType(ContentType.Application.Json)
-                bearerAuth(settings.getString("access_token",""))
+                bearerAuth(sessionManager.accessToken)
             }
 
             if (response.status == HttpStatusCode.OK) {

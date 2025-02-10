@@ -3,6 +3,7 @@ package org.company.app.auth.signin.presentation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.get
 import org.company.app.auth.signin.data.SignInRepository
@@ -21,7 +22,7 @@ import kotlinx.coroutines.launch
 class LoginViewModel(
     private val repository: SignInRepository,
 
-    private val settings: Settings
+    private val settings: ObservableSettings
 ) : ViewModel() {
 
     private val _email: MutableStateFlow<CustomTextFieldState> =

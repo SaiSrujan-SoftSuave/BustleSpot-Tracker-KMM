@@ -158,26 +158,27 @@ fun TrackerScreen(
                 }
 
                 is UiEvent.Success -> {
-                    // Wrap dropdowns into their own composable to avoid re-rendering the entire screen.
-                    DropDownSelectionList(
-                        title = "Project",
-                        dropDownList = projectsList,
-                        onItemClick = { println(it) },
-                        modifier = Modifier
-                            .fillMaxWidth(0.8f)
-                            .padding(vertical = 8.dp)
-                    )
-                    DropDownSelectionList(
-                        title = "Task",
-                        dropDownList = tasksList,
-                        onItemClick = { println(it) },
-                        modifier = Modifier
-                            .fillMaxWidth(0.8f)
-                            .padding(vertical = 8.dp)
-                    )
+
                 }
             }
-
+            DropDownSelectionList(
+                title = "Project",
+                dropDownList = projectsList,
+                onItemClick = { homeViewModel.setSelectedProject(it as Project) },
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .padding(vertical = 8.dp),
+                error = if (uiEvent is UiEvent.Failure) (uiEvent as UiEvent.Failure).error else null
+            )
+            DropDownSelectionList(
+                title = "Task",
+                dropDownList = tasksList,
+                onItemClick = {homeViewModel.setSelectedTask(it as TaskData) },
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .padding(vertical = 8.dp),
+                error = if (uiEvent is UiEvent.Failure) (uiEvent as UiEvent.Failure).error else null
+            )
             TimerSessionSection(
                 trackerTimer = trackerTimer,
                 trackerViewModel = trackerViewModel,
@@ -273,7 +274,8 @@ fun DropDownSelectionList(
     modifier: Modifier = Modifier,
     title: String,
     dropDownList: List<DisplayItem>,
-    onItemClick: (String) -> Unit
+    onItemClick: (DisplayItem) -> Unit,
+    error: String? = null  // Added error parameter
 ) {
     var enteredText by remember { mutableStateOf("") }
     var isMenuExpanded by remember { mutableStateOf(false) }
@@ -318,7 +320,13 @@ fun DropDownSelectionList(
                         contentDescription = "Toggle Dropdown"
                     )
                 }
-            }
+            },
+            supportingText = {
+                if (error != null) {
+                    Text(text = error, color = Color.Red) // Error text display
+                }
+            },
+            isError = error != null  // Visual error state
         )
         DropdownMenu(
             expanded = isMenuExpanded,
@@ -339,7 +347,7 @@ fun DropDownSelectionList(
                             onClick = {
                                 isMenuExpanded = false
                                 enteredText = item.projectName
-                                onItemClick(item.projectId)
+                                onItemClick(item)
                             }
                         )
                     }
@@ -352,7 +360,7 @@ fun DropDownSelectionList(
                             onClick = {
                                 isMenuExpanded = false
                                 enteredText = item.taskName
-                                onItemClick(item.taskId)
+                                onItemClick(item)
                             }
                         )
                     }
@@ -522,36 +530,5 @@ fun ScreenShotSection(
                 contentDescription = "Screenshot"
             )
         }
-    }
-}
-
-
-@Composable
-fun LogoutDropDown(modifier: Modifier = Modifier, onLogOutClick: () -> Unit) {
-    var isMenuExpanded by remember { mutableStateOf(false) }
-    DropdownMenu(
-        expanded = isMenuExpanded,
-        onDismissRequest = { isMenuExpanded = false },
-        modifier = Modifier.fillMaxWidth(0.8f),
-        properties = PopupProperties(focusable = false)
-    ) {
-        DropdownMenuItem(
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                    contentDescription = " TODO()",
-                )
-            },
-            text = {
-                Text(
-                    text = "Log Out",
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            onClick = {
-                isMenuExpanded = false
-                onLogOutClick()
-            }
-        )
     }
 }

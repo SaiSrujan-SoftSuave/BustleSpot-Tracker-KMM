@@ -1,5 +1,6 @@
 package org.company.app.di
 
+import com.russhwolf.settings.ObservableSettings
 import com.russhwolf.settings.Settings
 import com.russhwolf.settings.get
 import io.ktor.client.HttpClient
@@ -9,13 +10,17 @@ import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.logging.DEFAULT
 import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 import org.company.app.MainViewModel
 import org.company.app.SessionManager
@@ -28,25 +33,31 @@ import org.koin.dsl.module
 
 val koinGlobalModule = module {
     single { MainViewModel(get()) { provideUnauthenticatedHttpClient() } }
-    single { provideHttpClient(get(),get()) }
+    factory { provideHttpClient(get(),get()) }
     trackerModule
-    single<Settings> {
+    single<ObservableSettings> {
         createSettings()
     }
 }
 
 fun provideUnauthenticatedHttpClient(): HttpClient {
     return HttpClient(getEngine()) {
-        install(Logging) { level = LogLevel.ALL }
+        install(Logging) {
+            logger = Logger.DEFAULT
+            level = LogLevel.ALL
+        }
         install(ContentNegotiation) {
             json(Json { ignoreUnknownKeys = true })
         }
     }
 }
 
-fun provideHttpClient(settings: Settings, sessionManager: SessionManager): HttpClient {
+fun provideHttpClient(settings: ObservableSettings, sessionManager: SessionManager): HttpClient {
     return HttpClient(getEngine()) {
-        install(Logging) { level = LogLevel.ALL }
+        install(Logging) {
+            logger = Logger.DEFAULT
+            level = LogLevel.ALL
+        }
 
         install(ContentNegotiation) {
             json(Json { ignoreUnknownKeys = true })
@@ -65,17 +76,17 @@ fun provideHttpClient(settings: Settings, sessionManager: SessionManager): HttpC
         if (settings.getString("access_token", "").isNotEmpty()) {
             install(Auth) {
                 bearer {
-                    loadTokens {
-                        BearerTokens(
-                            accessToken = settings["access_token", ""],
-                            refreshToken = settings["refresh_token", ""]
-                        )
-                    }
+//                    loadTokens {
+//                        BearerTokens(
+//                            accessToken =settings.getString("access_token",""),
+//                            refreshToken = sessionManager.accessToken
+//                        )
+//                    }
 
                     refreshTokens {
                         try {
                             val response: HttpResponse = client.get("$BASEURL/auth/refresh-token") {
-                                bearerAuth(settings.get("access_token", "") ?: return@refreshTokens null)
+                                bearerAuth(sessionManager.accessToken ?: return@refreshTokens null)
                             }
 
                             if (response.status.isSuccess()) {
@@ -83,7 +94,7 @@ fun provideHttpClient(settings: Settings, sessionManager: SessionManager): HttpC
                                 settings.putString("access_token", newAccessToken)
                                 sessionManager.updateAccessToken(newAccessToken)
 
-                                return@refreshTokens BearerTokens(newAccessToken, settings.get("access_token", ""))
+                                return@refreshTokens BearerTokens(newAccessToken, sessionManager.accessToken)
                             }
                         } catch (e: Exception) {
                             println("Token refresh failed: ${e.message}")

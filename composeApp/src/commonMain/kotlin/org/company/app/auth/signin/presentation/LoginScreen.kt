@@ -43,6 +43,7 @@ import androidx.navigation.NavHostController
 import compose_multiplatform_app.composeapp.generated.resources.Res
 import compose_multiplatform_app.composeapp.generated.resources.ic_bustlespot
 import compose_multiplatform_app.composeapp.generated.resources.ic_password_visible
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.company.app.MainViewModel
 import org.company.app.SessionManager
@@ -68,7 +69,12 @@ fun LoginScreen(
     val uiEvent by loginViewModel.uiEvent.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val sessionManager : SessionManager = koinInject()
-
+    val coroutineScope = rememberCoroutineScope()
+    coroutineScope.launch {
+        sessionManager.flowAccessToken.collectLatest { token ->
+            sessionManager.setToken(token)
+        }
+    }
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = Color.Red,

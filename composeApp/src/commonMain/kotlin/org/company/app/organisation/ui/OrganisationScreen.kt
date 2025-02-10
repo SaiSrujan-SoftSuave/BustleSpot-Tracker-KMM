@@ -58,6 +58,7 @@ import androidx.navigation.NavController
 import com.russhwolf.settings.Settings
 import compose_multiplatform_app.composeapp.generated.resources.Res
 import compose_multiplatform_app.composeapp.generated.resources.compose_multiplatform
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.company.app.auth.navigation.Home
 import org.company.app.auth.utils.LoadingScreen
@@ -65,6 +66,7 @@ import org.company.app.auth.utils.UiEvent
 import org.company.app.mainnavigation.Graph
 import org.company.app.network.models.response.Organisation
 import kotlinx.coroutines.launch
+import org.company.app.SessionManager
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -86,7 +88,12 @@ fun OrganisationScreen(
     val organisationList by organisationViewModel.organisationList.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val logOutEvent by organisationViewModel.logOutEvent.collectAsState()
-
+    val sessionManager : SessionManager = koinInject()
+    coroutineScope.launch {
+        sessionManager.flowAccessToken.collectLatest { token ->
+            sessionManager.setToken(token)
+        }
+    }
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
@@ -96,7 +103,7 @@ fun OrganisationScreen(
                     Text(text = "Organisations")
                 },
                 onNavigationBackClick = {},
-                isNavigationEnabled = true,
+                isNavigationEnabled = false,
                 isAppBarIconEnabled = true,
                 iconUserName = "Test 1"
             ) {
@@ -373,7 +380,7 @@ fun AppBarIcon(modifier: Modifier = Modifier, username: String, onLogOutClick: (
     DropdownMenu(
         expanded = isMenuExpanded,
         onDismissRequest = { isMenuExpanded = false },
-        modifier = Modifier.fillMaxWidth(0.8f),
+        modifier = Modifier.fillMaxWidth(0.5f),
         properties = PopupProperties(focusable = false)
     ) {
         DropdownMenuItem(
@@ -386,7 +393,6 @@ fun AppBarIcon(modifier: Modifier = Modifier, username: String, onLogOutClick: (
             text = {
                 Text(
                     text = "Log Out",
-                    modifier = Modifier.fillMaxWidth()
                 )
             },
             onClick = {

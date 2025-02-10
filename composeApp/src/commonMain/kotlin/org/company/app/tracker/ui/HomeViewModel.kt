@@ -29,6 +29,20 @@ class HomeViewModel(
 
     private val trackerScreenData: TrackerScreenData = TrackerScreenData(null, null)
 
+    private val _selectedProject : MutableStateFlow<Project?> = MutableStateFlow(null)
+    val selectedProject: StateFlow<Project?> = _selectedProject.asStateFlow()
+
+    private val _selectedTask : MutableStateFlow<TaskData?> = MutableStateFlow(null)
+    val selectedTask: StateFlow<TaskData?> = _selectedTask.asStateFlow()
+
+
+    fun setSelectedProject(project: Project){
+        _selectedProject.value = project
+    }
+    fun setSelectedTask(task: TaskData){
+        _selectedTask.value = task
+    }
+
     private fun getAllProjects() {
         viewModelScope.launch {
             trackerRepository.getAllProjects().collect { result ->
@@ -81,7 +95,9 @@ class HomeViewModel(
         getAllProjects()
         getAllTasks()
     }
+    fun getAllActivities(){
 
+    }
 }
 
 data class TrackerScreenData(
