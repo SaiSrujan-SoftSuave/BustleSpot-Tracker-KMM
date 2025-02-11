@@ -9,7 +9,7 @@ val trackerModule = module{
     single<TrackerRepository>{
         TrackerRepositoryImpl(get(),get())
     }
-    single {
+    factory {
         HomeViewModel(get())
     }
 }

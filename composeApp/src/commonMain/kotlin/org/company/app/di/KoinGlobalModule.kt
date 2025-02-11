@@ -1,8 +1,6 @@
 package org.company.app.di
 
 import com.russhwolf.settings.ObservableSettings
-import com.russhwolf.settings.Settings
-import com.russhwolf.settings.get
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.HttpCallValidator
@@ -19,8 +17,6 @@ import io.ktor.client.request.get
 import io.ktor.client.statement.HttpResponse
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 import org.company.app.MainViewModel
 import org.company.app.SessionManager

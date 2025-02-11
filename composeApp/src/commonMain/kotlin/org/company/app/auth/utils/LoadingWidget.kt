@@ -15,12 +15,12 @@ fun LoadingScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.5f)).clickable(
+            .background(Color.White.copy(alpha = 0.5f)).clickable(
                 enabled = false,
                 onClick = {}
             ),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(color = Color.White)
+        CircularProgressIndicator(color = Color.Red)
     }
 }

@@ -309,6 +309,7 @@ fun BustleSpotAppBar(
     onNavigationBackClick: () -> Unit,
     isAppBarIconEnabled: Boolean = false,
     iconUserName: String = "Demo",
+    isLogOutEnabled : Boolean = false,
     onLogOutClick: () -> Unit
 ) {
 

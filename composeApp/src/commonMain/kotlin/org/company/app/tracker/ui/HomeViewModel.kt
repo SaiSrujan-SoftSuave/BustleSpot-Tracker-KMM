@@ -18,10 +18,10 @@ class HomeViewModel(
 ) : ViewModel() {
 
     private val _projectList: MutableStateFlow<List<Project>> = MutableStateFlow(emptyList())
-    val projectList: StateFlow<List<DisplayItem>> get() = _projectList.asStateFlow()
-
     private val _taskList: MutableStateFlow<List<TaskData>> = MutableStateFlow(emptyList())
-    val taskList: StateFlow<List<DisplayItem>> get() = _taskList.asStateFlow()
+
+    private val _mainTaskList: MutableStateFlow<List<TaskData>> = MutableStateFlow(emptyList())
+    private val _mainProjectList: MutableStateFlow<List<Project>> = MutableStateFlow(emptyList())
 
     private val _uiEvent: MutableStateFlow<UiEvent<TrackerScreenData>> =
         MutableStateFlow(UiEvent.Loading)
@@ -29,26 +29,29 @@ class HomeViewModel(
 
     private val trackerScreenData: TrackerScreenData = TrackerScreenData(null, null)
 
-    private val _selectedProject : MutableStateFlow<Project?> = MutableStateFlow(null)
+    private val _selectedProject: MutableStateFlow<Project?> = MutableStateFlow(null)
     val selectedProject: StateFlow<Project?> = _selectedProject.asStateFlow()
 
-    private val _selectedTask : MutableStateFlow<TaskData?> = MutableStateFlow(null)
+    private val _selectedTask: MutableStateFlow<TaskData?> = MutableStateFlow(null)
     val selectedTask: StateFlow<TaskData?> = _selectedTask.asStateFlow()
 
+    private val _projectDropDownState: MutableStateFlow<DropDownState> =
+        MutableStateFlow(DropDownState())
+    val projectDropDownState: StateFlow<DropDownState> = _projectDropDownState.asStateFlow()
 
-    fun setSelectedProject(project: Project){
-        _selectedProject.value = project
-    }
-    fun setSelectedTask(task: TaskData){
-        _selectedTask.value = task
-    }
+    private val _taskDropDownState: MutableStateFlow<DropDownState> =
+        MutableStateFlow(DropDownState())
+    val taskDropDownState: StateFlow<DropDownState> = _taskDropDownState.asStateFlow()
 
-    private fun getAllProjects() {
+    fun getAllProjects() {
         viewModelScope.launch {
             trackerRepository.getAllProjects().collect { result ->
                 when (result) {
                     is Result.Error -> {
                         _uiEvent.value = UiEvent.Failure(result.message ?: "Unknown Error")
+                        _projectDropDownState.value = _projectDropDownState.value.copy(
+                            errorMessage = result.message ?: "Failed to fetch projects"
+                        )
                     }
 
                     Result.Loading -> {
@@ -56,23 +59,28 @@ class HomeViewModel(
                     }
 
                     is Result.Success -> {
-                        _projectList.value = result.data.projectsData.projectList
+                        _mainProjectList.value = result.data.projectsData.projectList
+                        _projectDropDownState.value = _projectDropDownState.value.copy(
+                            dropDownList = result.data.projectsData.projectList,
+                            errorMessage = ""
+                        )
                         trackerScreenData.listOfProject?.addAll(result.data.projectsData.projectList)
                         _uiEvent.value = UiEvent.Success(trackerScreenData)
-                        println("Success: ${result.data}")
                     }
                 }
-
             }
         }
     }
 
-    private fun getAllTasks() {
+    fun getAllTasks() {
         viewModelScope.launch {
             trackerRepository.getAllTask().collect { result ->
                 when (result) {
                     is Result.Error -> {
                         _uiEvent.value = UiEvent.Failure(result.message ?: "Unknown Error")
+                        _taskDropDownState.value = _taskDropDownState.value.copy(
+                            errorMessage = result.message ?: "Failed to fetch tasks"
+                        )
                     }
 
                     Result.Loading -> {
@@ -80,27 +88,102 @@ class HomeViewModel(
                     }
 
                     is Result.Success -> {
-                        _taskList.value = result.data.taskList
+                        _mainTaskList.value = result.data.taskList
+                        _taskDropDownState.value = _taskDropDownState.value.copy(
+                            dropDownList = result.data.taskList,
+                            errorMessage = ""
+                        )
                         trackerScreenData.listOfTask?.addAll(result.data.taskList)
                         _uiEvent.value = UiEvent.Success(trackerScreenData)
-                        println("Success: ${result.data}")
                     }
                 }
-
             }
         }
     }
 
-    init {
-        getAllProjects()
-        getAllTasks()
-    }
-    fun getAllActivities(){
+    fun handleDropDownEvents(dropDownEvents: DropDownEvents) {
+        when (dropDownEvents) {
+            is DropDownEvents.OnProjectSearch -> {
+                _projectDropDownState.value = _projectDropDownState.value.copy(
+                    inputText = dropDownEvents.inputText
+                )
+                if (dropDownEvents.inputText.isEmpty()) {
+                    _selectedProject.value = null
+                    _taskDropDownState.value = _taskDropDownState.value.copy(dropDownList = emptyList())
+                }
+            }
 
+            is DropDownEvents.OnProjectSelection -> {
+                _selectedProject.value = dropDownEvents.selectedProject
+                _projectDropDownState.value = _projectDropDownState.value.copy(
+                    inputText = dropDownEvents.selectedProject.projectName,
+                    errorMessage = ""
+                )
+
+                val filteredTasks = _mainTaskList.value.filter { it.projectId == dropDownEvents.selectedProject.projectId }
+                _taskDropDownState.value = _taskDropDownState.value.copy(
+                    dropDownList = filteredTasks,
+                    errorMessage = if (filteredTasks.isEmpty()) "No task available to select" else ""
+                )
+            }
+
+            is DropDownEvents.OnTaskSearch -> {
+                _taskDropDownState.value = _taskDropDownState.value.copy(
+                    inputText = dropDownEvents.inputText
+                )
+                if (dropDownEvents.inputText.isEmpty()) {
+                    _selectedTask.value = null
+                }
+                if (_selectedProject.value == null) {
+                    _projectDropDownState.value = _projectDropDownState.value.copy(
+                        errorMessage = "Please select the project first"
+                    )
+                }
+            }
+
+            is DropDownEvents.OnTaskSelection -> {
+                _selectedTask.value = dropDownEvents.selectedTask
+                _taskDropDownState.value = _taskDropDownState.value.copy(
+                    inputText = dropDownEvents.selectedTask.taskName,
+                    errorMessage = ""
+                )
+            }
+
+            is DropDownEvents.OnProjectDropDownClick -> {
+                println("Project dropdown clicked")
+            }
+
+            is DropDownEvents.OnTaskDropDownClick -> {
+                if (_selectedProject.value == null) {
+                    _projectDropDownState.value = _projectDropDownState.value.copy(
+                        errorMessage = "Please select the project first"
+                    )
+                } else {
+                    _projectDropDownState.value = _projectDropDownState.value.copy(errorMessage = "")
+                }
+            }
+        }
     }
 }
 
 data class TrackerScreenData(
     val listOfProject: MutableList<Project>?,
     val listOfTask: MutableList<TaskData>?
+)
+
+sealed class DropDownEvents {
+    data class OnProjectSearch(val inputText: String) : DropDownEvents()
+    data class OnTaskSearch(val inputText: String) : DropDownEvents()
+
+    data class OnProjectSelection(val selectedProject: Project) : DropDownEvents()
+    data class OnTaskSelection(val selectedTask: TaskData) : DropDownEvents()
+
+    data object OnProjectDropDownClick : DropDownEvents()
+    data object OnTaskDropDownClick : DropDownEvents()
+}
+
+data class DropDownState(
+    val errorMessage: String = "",
+    val inputText: String = "",
+    val dropDownList: List<DisplayItem> = emptyList(),
 )

@@ -19,6 +19,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -71,7 +72,7 @@ fun TrackerScreen(
     val homeViewModel = koinViewModel<HomeViewModel>()
     val trackerViewModel = koinViewModel<TrackerViewModel>()
 
-    // States from view models.
+    // Tracker timer and other states from trackerViewModel remain unchanged.
     val trackerTimer by trackerViewModel.trackerTime.collectAsState()
     val isTrackerRunning by trackerViewModel.isTrackerRunning.collectAsState()
     val idleTime by trackerViewModel.idealTime.collectAsState()
@@ -83,16 +84,25 @@ fun TrackerScreen(
     val customeTimeForIdleTime by trackerViewModel.customeTimeForIdleTime.collectAsState()
     val numberOfScreenshot by trackerViewModel.numberOfScreenshot.collectAsState()
 
-    // UI and local states
+    // Collect the consolidated drop-down states from HomeViewModel.
+    val projectDropDownState by homeViewModel.projectDropDownState.collectAsState()
+    val taskDropDownState by homeViewModel.taskDropDownState.collectAsState()
+
+    // Still track the selected project and task if needed.
+    val selectedProject by homeViewModel.selectedProject.collectAsState()
+    val selectedTask by homeViewModel.selectedTask.collectAsState()
+
+    // UI event (loading, failure, etc.) from the view model.
+    val uiEvent by homeViewModel.uiEvent.collectAsState()
+
+    // Local UI states.
     var showIdleDialog by remember { mutableStateOf(false) }
     var isExitClicked by remember { mutableStateOf(false) }
     var totalIdleTime by remember { mutableStateOf(0) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
-    val sessionManager: SessionManager = koinInject()
-
-    // Trigger idle dialog only when needed.
+    // Launch idle dialog effect.
     LaunchedEffect(idleTime) {
         if (idleTime > customeTimeForIdleTime && !showIdleDialog) {
             onFocusReceived.invoke()
@@ -102,10 +112,11 @@ fun TrackerScreen(
         }
     }
 
-    // UI events handling (snackbar, loading)
-    val uiEvent by homeViewModel.uiEvent.collectAsState()
-    val projectsList by homeViewModel.projectList.collectAsState()
-    val tasksList by homeViewModel.taskList.collectAsState()
+    // Launch fetching projects and tasks when the screen starts.
+    LaunchedEffect(key1 = Unit) {
+        homeViewModel.getAllProjects()
+        homeViewModel.getAllTasks()
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -137,6 +148,7 @@ fun TrackerScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Handle UI events (failure, loading, success).
             when (uiEvent) {
                 is UiEvent.Failure -> {
                     LaunchedEffect(uiEvent) {
@@ -148,33 +160,60 @@ fun TrackerScreen(
                         }
                     }
                 }
-
                 is UiEvent.Loading -> {
                     LoadingScreen()
                 }
-
                 is UiEvent.Success -> {
-
+                    // You might show a success message or simply do nothing.
+                    println("Success")
                 }
             }
+
+            // Updated DropDown for Project using consolidated state.
             DropDownSelectionList(
                 title = "Project",
-                dropDownList = projectsList,
-                onItemClick = { homeViewModel.setSelectedProject(it as Project) },
+                dropDownList = projectDropDownState.dropDownList,
+                onItemClick = { selectedItem ->
+                    homeViewModel.handleDropDownEvents(
+                        DropDownEvents.OnProjectSelection(selectedItem as Project)
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
                     .padding(vertical = 8.dp),
-                error = if (uiEvent is UiEvent.Failure) (uiEvent as UiEvent.Failure).error else null
+                error = projectDropDownState.errorMessage,
+                onDropDownClick = {
+                    homeViewModel.handleDropDownEvents(DropDownEvents.OnProjectDropDownClick)
+                },
+                inputText = projectDropDownState.inputText,
+                onSearchText = { searchText ->
+                    homeViewModel.handleDropDownEvents(DropDownEvents.OnProjectSearch(searchText))
+                }
             )
+
+            // Updated DropDown for Task using consolidated state.
             DropDownSelectionList(
                 title = "Task",
-                dropDownList = tasksList,
-                onItemClick = { homeViewModel.setSelectedTask(it as TaskData) },
+                dropDownList = taskDropDownState.dropDownList,
+                onItemClick = { selectedItem ->
+                    homeViewModel.handleDropDownEvents(
+                        DropDownEvents.OnTaskSelection(selectedItem as TaskData)
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
                     .padding(vertical = 8.dp),
-                error = if (uiEvent is UiEvent.Failure) (uiEvent as UiEvent.Failure).error else null
+                error = taskDropDownState.errorMessage,
+                isEnabled = taskDropDownState.dropDownList.isNotEmpty(),
+                onDropDownClick = {
+                    homeViewModel.handleDropDownEvents(DropDownEvents.OnTaskDropDownClick)
+                },
+                inputText = taskDropDownState.inputText,
+                onSearchText = { searchText ->
+                    homeViewModel.handleDropDownEvents(DropDownEvents.OnTaskSearch(searchText))
+                }
             )
+
             TimerSessionSection(
                 trackerTimer = trackerTimer,
                 trackerViewModel = trackerViewModel,
@@ -182,13 +221,14 @@ fun TrackerScreen(
                 mouseCount = mouseCount,
                 idleTime = totalIdleTime,
                 isTrackerRunning = isTrackerRunning,
-                sessionManager = sessionManager
+                taskName = selectedTask?.taskName ?: ""
             )
 
             ScreenShotSection(
                 lastImageTakenTime = secondsToTime(screenShotTakenTime),
                 imageBitmap = screenShotState
             )
+
             Box {
                 Row {
                     TextField(
@@ -199,7 +239,6 @@ fun TrackerScreen(
                             } else {
                                 trackerViewModel.addCustomTimeForIdleTime(10)
                             }
-
                         },
                         label = { Text("Custom Time") },
                     )
@@ -236,6 +275,7 @@ fun TrackerScreen(
                 )
             }
         }
+
         if (isExitClicked) {
             CustomAlertDialog(
                 title = "Quit",
@@ -269,19 +309,28 @@ fun TrackerScreen(
 fun DropDownSelectionList(
     modifier: Modifier = Modifier,
     title: String,
+    onSearchText: (String) -> Unit,
+    inputText: String,
     dropDownList: List<DisplayItem>,
     onItemClick: (DisplayItem) -> Unit,
-    error: String? = null  // Added error parameter
+    isEnabled: Boolean = true,
+    onDropDownClick: () -> Unit = {},
+    error: String? = null,
 ) {
-    var enteredText by remember { mutableStateOf("") }
     var isMenuExpanded by remember { mutableStateOf(false) }
-    // Memoize filtered list so that filtering isn’t re-computed on every recompose
-    val filteredList by remember(enteredText, dropDownList) {
+
+    // When the drop-down menu becomes visible, trigger the onDropDownClick event.
+    LaunchedEffect(isMenuExpanded) {
+        if (isMenuExpanded) onDropDownClick()
+    }
+
+    // Memoize the filtered list based on the input text.
+    val filteredList by remember(inputText, dropDownList) {
         derivedStateOf {
             dropDownList.filter {
                 when (it) {
-                    is Project -> it.projectName.contains(enteredText, ignoreCase = true)
-                    is TaskData -> it.taskName.contains(enteredText, ignoreCase = true)
+                    is Project -> it.projectName.contains(inputText, ignoreCase = true)
+                    is TaskData -> it.taskName.contains(inputText, ignoreCase = true)
                     else -> true
                 }
             }
@@ -292,23 +341,18 @@ fun DropDownSelectionList(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = title,
-            color = Color.Red,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 4.dp),
-            fontSize = 10.sp
-        )
         TextField(
-            value = enteredText,
+            value = inputText,
             onValueChange = {
-                enteredText = it
-                isMenuExpanded = true
+                onSearchText(it)
+                isMenuExpanded = isEnabled
             },
+            singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = {
-                IconButton(onClick = { isMenuExpanded = !isMenuExpanded }) {
+                IconButton(onClick = {
+                    isMenuExpanded = if (isEnabled) !isMenuExpanded else isMenuExpanded
+                }) {
                     Icon(
                         painter = painterResource(
                             if (isMenuExpanded) Res.drawable.ic_drop_up else Res.drawable.ic_drop_down
@@ -317,12 +361,24 @@ fun DropDownSelectionList(
                     )
                 }
             },
+            label = {
+                Text(
+                    text = title,
+                    color = Color.Red,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
             supportingText = {
-                if (error != null) {
-                    Text(text = error, color = Color.Red) // Error text display
+                if (error?.isNotEmpty() == true) {
+                    Text(text = error, color = Color.Red)
                 }
             },
-            isError = error != null  // Visual error state
+            colors = TextFieldDefaults.colors(
+                disabledContainerColor = Color.White,
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White
+            ),
+            isError = error?.isNotEmpty() ?: false
         )
         DropdownMenu(
             expanded = isMenuExpanded,
@@ -342,12 +398,10 @@ fun DropDownSelectionList(
                             },
                             onClick = {
                                 isMenuExpanded = false
-                                enteredText = item.projectName
                                 onItemClick(item)
                             }
                         )
                     }
-
                     is TaskData -> {
                         DropdownMenuItem(
                             text = {
@@ -355,7 +409,6 @@ fun DropDownSelectionList(
                             },
                             onClick = {
                                 isMenuExpanded = false
-                                enteredText = item.taskName
                                 onItemClick(item)
                             }
                         )
@@ -376,9 +429,7 @@ fun TimerSessionSection(
     mouseCount: Int,
     keyCount: Int,
     isTrackerRunning: Boolean,
-    sessionManager: SessionManager
 ) {
-    // Use local state to control play/pause. Consider moving this state to the view model if needed.
     var isPlaying by remember { mutableStateOf(false) }
     Column(
         modifier = modifier.fillMaxWidth(0.8f),
@@ -494,7 +545,8 @@ fun TimerSessionSection(
 
 @Composable
 fun ScreenShotSection(
-    modifier: Modifier = Modifier, lastImageTakenTime: String = "10min ago",
+    modifier: Modifier = Modifier,
+    lastImageTakenTime: String = "10min ago",
     imageBitmap: ImageBitmap? = imageResource(Res.drawable.screen)
 ) {
     Column(
