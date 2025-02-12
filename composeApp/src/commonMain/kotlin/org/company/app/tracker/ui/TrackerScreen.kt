@@ -130,7 +130,7 @@ fun TrackerScreen(
                     }
                 },
                 isNavigationEnabled = true,
-                isAppBarIconEnabled = true,
+                isAppBarIconEnabled = false, // to remove the user icon in tracker screen
                 iconUserName = "Test 1",
             )
         },
