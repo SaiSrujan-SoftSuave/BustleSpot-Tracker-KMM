@@ -1,6 +1,5 @@
 import org.jetbrains.compose.ExperimentalComposeLibrary
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
-import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -28,9 +27,9 @@ kotlin {
         iosSimulatorArm64()
     ).forEach {
         it.binaries.framework {
-            baseName = "ComposeApp"
+            baseName = "composeApp"
             isStatic = true
-            binaryOption("bundleId", "org.company.app.iosApp")
+            binaryOption("bundleId", "org.softsuave.app.iosApp")
         }
     }
 
@@ -61,6 +60,9 @@ kotlin {
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.ktor.client.cio)
             implementation(libs.bundles.ktor)
+
+            implementation(libs.lifecycle.viewmodel.compose)
+
         }
 
         commonTest.dependencies {
@@ -86,7 +88,7 @@ kotlin {
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.ktor.client.okhttp)
 
-            implementation("com.github.kwhat:jnativehook:2.2.2")
+            implementation(libs.jnativehook)
         }
 
         nativeMain.dependencies {

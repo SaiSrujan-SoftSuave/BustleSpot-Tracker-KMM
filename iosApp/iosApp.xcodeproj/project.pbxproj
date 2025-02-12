@@ -17,6 +17,8 @@
 		A93A953A29CC810C00F8E227 /* iosApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iosApp.swift; sourceTree = "<group>"; };
 		A93A953E29CC810D00F8E227 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A93A954129CC810D00F8E227 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		EBCD293A2D5DC90C00FF8949 /* composeApp.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = composeApp.framework; path = "../composeApp/build/xcode-frameworks/Debug/iphoneos18.2/composeApp.framework"; sourceTree = "<group>"; };
+		EBCD293E2D5DC92600FF8949 /* composeApp.framework.dSYM */ = {isa = PBXFileReference; lastKnownFileType = wrapper.dsym; name = composeApp.framework.dSYM; path = "../composeApp/build/xcode-frameworks/Debug/iphoneos18.2/composeApp.framework.dSYM"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,6 +70,8 @@
 		C4127409AE3703430489E7BC /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				EBCD293E2D5DC92600FF8949 /* composeApp.framework.dSYM */,
+				EBCD293A2D5DC90C00FF8949 /* composeApp.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -79,6 +83,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = A93A954529CC810D00F8E227 /* Build configuration list for PBXNativeTarget "iosApp" */;
 			buildPhases = (
+				A9D80A052AAB5CDE006C8738 /* ShellScript */,
 				A93A953329CC810C00F8E227 /* Sources */,
 				A93A953429CC810C00F8E227 /* Frameworks */,
 				A93A953529CC810C00F8E227 /* Resources */,
@@ -135,6 +140,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		A9D80A052AAB5CDE006C8738 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 8;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+			shellPath = /bin/sh;
+			shellScript = "cd \"$SRCROOT/..\"\n./gradlew :composeApp:embedAndSignAppleFrameworkForXcode\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		A93A953329CC810C00F8E227 /* Sources */ = {
@@ -280,7 +305,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = org.company.app.iosApp.jio;
+				PRODUCT_BUNDLE_IDENTIFIER = org.softsuave.app.iosApp;
 				PRODUCT_NAME = "Compose Multiplatform App";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -306,7 +331,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = org.company.app.iosApp.jio;
+				PRODUCT_BUNDLE_IDENTIFIER = org.softsuave.app.iosApp;
 				PRODUCT_NAME = "Compose Multiplatform App";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
