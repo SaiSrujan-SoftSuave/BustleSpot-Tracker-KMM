@@ -56,7 +56,6 @@ import org.company.app.mainnavigation.Graph
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-import org.koin.core.annotation.KoinExperimentalAPI
 
 @Composable
 fun LoginScreen(
@@ -68,7 +67,7 @@ fun LoginScreen(
     val passwordState = loginViewModel.password.collectAsState()
     val uiEvent by loginViewModel.uiEvent.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val sessionManager : SessionManager = koinInject()
+    val sessionManager: SessionManager = koinInject()
     val coroutineScope = rememberCoroutineScope()
     coroutineScope.launch {
         sessionManager.flowAccessToken.collectLatest { token ->
@@ -230,7 +229,7 @@ fun LoginScreen(
                             text = "Sign Up",
                             color = Color.Red,
                             modifier = Modifier.clickable {
-                                navController.navigate(AuthScreen.SignUp.route)
+                                //navController.navigate(AuthScreen.SignUp.route)
                             },
                             style = MaterialTheme.typography.bodyLarge,
                         )
@@ -258,8 +257,8 @@ fun LoginScreen(
                 )
             }
         }
-
         when (uiEvent) {
+
             is UiEvent.Failure -> {
                 rememberCoroutineScope().launch {
                     snackbarHostState.showSnackbar((uiEvent as UiEvent.Failure).error)
@@ -272,19 +271,8 @@ fun LoginScreen(
 
             is UiEvent.Success -> {
                 rememberCoroutineScope().launch {
-                    snackbarHostState.showSnackbar("Completed Login Successfully")
-                    (uiEvent as UiEvent.Success<SignInResponse>).data.access_token?.let { newToken ->
-                        sessionManager.updateAccessToken(
-                            newToken
-                        )
-                    } ?: println("Token not found")
-                        mainViewModel.fetchAccessToken()
-                        navController.navigate(Home.Organisation.route) {
-                            popUpTo(Graph.AUTHENTICATION) {
-                                inclusive = true
-                            }
-
-                    }
+                    snackbarHostState.showSnackbar("Login Successful.")
+                    navController.navigate(Home.Organisation.route)
                 }
             }
 

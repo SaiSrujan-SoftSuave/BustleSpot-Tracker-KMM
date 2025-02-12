@@ -33,11 +33,11 @@ class SessionManager(private val settings: ObservableSettings) {
         accessToken = token
     }
 
-    fun updateAccessToken(token: String) {
+    fun updateAccessToken(token: String) : Boolean {
         isLoggedIn = true
         settings.putString("access_token", token)
-
         println("Updated access token. isLoggedIn = $isLoggedIn")
+        return true
     }
 
     fun clearSession() {

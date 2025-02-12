@@ -4,8 +4,11 @@ package org.company.app.auth.signin.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.russhwolf.settings.ObservableSettings
-import com.russhwolf.settings.Settings
-import com.russhwolf.settings.get
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import org.company.app.SessionManager
 import org.company.app.auth.signin.data.SignInRepository
 import org.company.app.auth.signin.data.SignInResponse
 import org.company.app.auth.utils.CustomTextFieldState
@@ -13,15 +16,10 @@ import org.company.app.auth.utils.Result
 import org.company.app.auth.utils.UiEvent
 import org.company.app.auth.utils.validateEmail
 import org.company.app.auth.utils.validatePassword
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 
 class LoginViewModel(
     private val repository: SignInRepository,
-
+    private val sessionManager: SessionManager,
     private val settings: ObservableSettings
 ) : ViewModel() {
 
@@ -36,12 +34,6 @@ class LoginViewModel(
     private val _uiEvent: MutableStateFlow<UiEvent<SignInResponse>?> = MutableStateFlow(null)
     val uiEvent: StateFlow<UiEvent<SignInResponse>?> = _uiEvent
 
-
-
-//    val accessToken =
-//        dataStore.data.map {
-//            it[stringPreferencesKey("access_token")] ?: ""
-//        }
 
     fun onEvent(event: LoginEvent) {
         when (event) {
@@ -68,8 +60,14 @@ class LoginViewModel(
                     repository.signIn(email.value.value, password.value.value).collect { result ->
                         when (result) {
                             is Result.Success -> {
+                                launch {
+                                    result.data.access_token?.let { newToken ->
+                                        sessionManager.updateAccessToken(
+                                            newToken
+                                        )
+                                    } ?: println("Token not found")
+                                }
                                 _uiEvent.value = UiEvent.Success(result.data)
-                                println("Success: ${result.data}")
                             }
 
                             is Result.Error -> {
@@ -91,14 +89,6 @@ class LoginViewModel(
             }
         }
     }
-
-//    fun saveAccessToken(token: String) {
-//        viewModelScope.launch {
-//            dataStore.edit {
-//                it[stringPreferencesKey("access_token")] = token
-//            }
-//        }
-//    }
 }
 
 
