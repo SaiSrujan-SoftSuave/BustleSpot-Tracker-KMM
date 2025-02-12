@@ -26,6 +26,7 @@ class SignOutUseCase(
     private val sessionManager: SessionManager
 ){
     operator fun invoke(): Flow<Result<SignOutResponseDto>> = flow {
+
         try {
             emit(Result.Loading)
             val response: HttpResponse = httpClient.post("$BASEURL${APIEndpoints.SIGNOUT}") {

@@ -81,14 +81,14 @@ fun OrganisationScreen(
     modifier: Modifier = Modifier,
     navController: NavController,
 
-) {
+    ) {
     val organisationViewModel = koinViewModel<OrganisationViewModel>()
     val uiEvent by organisationViewModel.uiEvent.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val organisationList by organisationViewModel.organisationList.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val logOutEvent by organisationViewModel.logOutEvent.collectAsState()
-    val sessionManager : SessionManager = koinInject()
+    val sessionManager: SessionManager = koinInject()
     coroutineScope.launch {
         sessionManager.flowAccessToken.collectLatest { token ->
             sessionManager.setToken(token)
@@ -105,10 +105,12 @@ fun OrganisationScreen(
                 onNavigationBackClick = {},
                 isNavigationEnabled = false,
                 isAppBarIconEnabled = true,
-                iconUserName = "Test 1"
-            ) {
-                organisationViewModel.performLogOut()
-            }
+                iconUserName = "Test 1",
+                isLogOutEnabled = true,
+                onLogOutClick = {
+                    organisationViewModel.performLogOut()
+                }
+            )
         },
         containerColor = Color.White,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
@@ -183,7 +185,8 @@ fun OrganisationScreen(
 //                }
 
             }
-            null ->{
+
+            null -> {
 
             }
         }
@@ -309,8 +312,8 @@ fun BustleSpotAppBar(
     onNavigationBackClick: () -> Unit,
     isAppBarIconEnabled: Boolean = false,
     iconUserName: String = "Demo",
-    isLogOutEnabled : Boolean = false,
-    onLogOutClick: () -> Unit
+    isLogOutEnabled: Boolean = false,
+    onLogOutClick: () -> Unit = {}
 ) {
 
 
@@ -337,9 +340,12 @@ fun BustleSpotAppBar(
                     modifier = Modifier.padding(end = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    AppBarIcon(username = iconUserName) {
-                        onLogOutClick()
-                    }
+                    AppBarIcon(
+                        username = iconUserName,
+                        isLogOutEnabled = isLogOutEnabled,
+                        onLogOutClick = {
+                            onLogOutClick()
+                        })
                 }
             }
         },
@@ -355,7 +361,12 @@ fun BustleSpotAppBar(
 }
 
 @Composable
-fun AppBarIcon(modifier: Modifier = Modifier, username: String, onLogOutClick: () -> Unit) {
+fun AppBarIcon(
+    modifier: Modifier = Modifier,
+    username: String,
+    onLogOutClick: () -> Unit,
+    isLogOutEnabled: Boolean = true
+) {
     var isMenuExpanded by remember { mutableStateOf(false) }
     val showWord = username.split(" ").map { it[0].uppercase() }.joinToString("")
     Box(
@@ -379,7 +390,7 @@ fun AppBarIcon(modifier: Modifier = Modifier, username: String, onLogOutClick: (
     }
 
     DropdownMenu(
-        expanded = isMenuExpanded,
+        expanded = isMenuExpanded && isLogOutEnabled,
         onDismissRequest = { isMenuExpanded = false },
         modifier = Modifier.fillMaxWidth(0.5f),
         properties = PopupProperties(focusable = false)

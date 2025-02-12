@@ -133,9 +133,6 @@ fun TrackerScreen(
                 isNavigationEnabled = true,
                 isAppBarIconEnabled = true,
                 iconUserName = "Test 1",
-                onLogOutClick = {
-                    // no need to implement in tracker screen
-                }
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -318,10 +315,12 @@ fun DropDownSelectionList(
     error: String? = null,
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
+    // We also track whether we've already notified the parent for this open.
+    var hasNotifiedOnOpen by remember { mutableStateOf(false) }
 
-    // When the drop-down menu becomes visible, trigger the onDropDownClick event.
+    // Log state changes only when isMenuExpanded changes.
     LaunchedEffect(isMenuExpanded) {
-        if (isMenuExpanded) onDropDownClick()
+        println("isMenuExpanded changed to: $isMenuExpanded")
     }
 
     // Memoize the filtered list based on the input text.
@@ -343,15 +342,27 @@ fun DropDownSelectionList(
     ) {
         TextField(
             value = inputText,
-            onValueChange = {
-                onSearchText(it)
-                isMenuExpanded = isEnabled
-            },
+            onValueChange = { onSearchText(it)
+                            isMenuExpanded = true
+                hasNotifiedOnOpen = true
+                            },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = {
                 IconButton(onClick = {
-                    isMenuExpanded = if (isEnabled) !isMenuExpanded else isMenuExpanded
+                    onDropDownClick()
+                    if (!isMenuExpanded && isEnabled) {
+                        isMenuExpanded = true
+                        // Only call onDropDownClick if we haven't already for this open cycle.
+                        if (!hasNotifiedOnOpen) {
+                            hasNotifiedOnOpen = true
+                        }
+                    } else {
+                        // Close the dropdown and reset our notification flag.
+                        isMenuExpanded = false
+                        hasNotifiedOnOpen = false
+                    }
+                  println("icon clicked")
                 }) {
                     Icon(
                         painter = painterResource(
@@ -381,8 +392,12 @@ fun DropDownSelectionList(
             isError = error?.isNotEmpty() ?: false
         )
         DropdownMenu(
-            expanded = isMenuExpanded,
-            onDismissRequest = { isMenuExpanded = false },
+            expanded = isMenuExpanded && hasNotifiedOnOpen && isEnabled,
+            onDismissRequest = {
+                isMenuExpanded = true
+                hasNotifiedOnOpen = false
+                println("dismiss called")
+            },
             modifier = Modifier.fillMaxWidth(0.8f),
             properties = PopupProperties(focusable = false)
         ) {
@@ -418,6 +433,7 @@ fun DropDownSelectionList(
         }
     }
 }
+
 
 @Composable
 fun TimerSessionSection(
@@ -573,7 +589,7 @@ fun ScreenShotSection(
         }
         imageBitmap?.let { bitmap ->
             Image(
-                modifier = Modifier.padding(top = 16.dp),
+                modifier = Modifier.padding(top = 16.dp).align(Alignment.CenterHorizontally),
                 bitmap = bitmap,
                 contentDescription = "Screenshot"
             )

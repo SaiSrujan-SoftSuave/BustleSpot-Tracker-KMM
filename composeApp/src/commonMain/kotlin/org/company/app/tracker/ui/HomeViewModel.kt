@@ -2,22 +2,21 @@ package org.company.app.tracker.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import org.company.app.auth.utils.Result
 import org.company.app.auth.utils.UiEvent
 import org.company.app.network.models.response.DisplayItem
 import org.company.app.network.models.response.Project
 import org.company.app.network.models.response.TaskData
 import org.company.app.tracker.data.TrackerRepository
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 
 class HomeViewModel(
     private val trackerRepository: TrackerRepository
 ) : ViewModel() {
 
-    private val _projectList: MutableStateFlow<List<Project>> = MutableStateFlow(emptyList())
     private val _taskList: MutableStateFlow<List<TaskData>> = MutableStateFlow(emptyList())
 
     private val _mainTaskList: MutableStateFlow<List<TaskData>> = MutableStateFlow(emptyList())
@@ -62,7 +61,7 @@ class HomeViewModel(
                         _mainProjectList.value = result.data.projectsData.projectList
                         _projectDropDownState.value = _projectDropDownState.value.copy(
                             dropDownList = result.data.projectsData.projectList,
-                            errorMessage = ""
+                            errorMessage = if(result.data.projectsData.projectList.isEmpty()) "No projects to select" else ""
                         )
                         trackerScreenData.listOfProject?.addAll(result.data.projectsData.projectList)
                         _uiEvent.value = UiEvent.Success(trackerScreenData)
@@ -90,7 +89,7 @@ class HomeViewModel(
                     is Result.Success -> {
                         _mainTaskList.value = result.data.taskList
                         _taskDropDownState.value = _taskDropDownState.value.copy(
-                            dropDownList = result.data.taskList,
+                            dropDownList = _taskList.value,
                             errorMessage = ""
                         )
                         trackerScreenData.listOfTask?.addAll(result.data.taskList)
@@ -123,8 +122,14 @@ class HomeViewModel(
                 val filteredTasks = _mainTaskList.value.filter { it.projectId == dropDownEvents.selectedProject.projectId }
                 _taskDropDownState.value = _taskDropDownState.value.copy(
                     dropDownList = filteredTasks,
-                    errorMessage = if (filteredTasks.isEmpty()) "No task available to select" else ""
+                    errorMessage = if (filteredTasks.isEmpty()) {
+                        "No task available to select"
+                    } else "",
+                    inputText = ""
                 )
+                if(filteredTasks.isEmpty()){
+                    _selectedTask.value = null
+                }
             }
 
             is DropDownEvents.OnTaskSearch -> {

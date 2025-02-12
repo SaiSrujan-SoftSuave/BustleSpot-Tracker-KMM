@@ -40,6 +40,7 @@ class OrganisationViewModel(
 
     private fun getAllOrganisation() {
         viewModelScope.launch {
+
             organisationRepository.getAllOrganisation().collect { result ->
                 when (result) {
                     is Result.Error -> {

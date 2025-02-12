@@ -72,6 +72,15 @@ actual class TrackerViewModel actual constructor() : ViewModel() {
     actual var mouseMotionCount: MutableStateFlow<Int>
         get() = TODO("Not yet implemented")
         set(value) {}
+    actual var customeTimeForIdleTime: MutableStateFlow<Int>
+        get() = TODO("Not yet implemented")
+        set(value) {}
+    actual var numberOfScreenshot: MutableStateFlow<Int>
+        get() = TODO("Not yet implemented")
+        set(value) {}
+
+    actual fun addCustomTimeForIdleTime(time: Int) {
+    }
 
 
 }
