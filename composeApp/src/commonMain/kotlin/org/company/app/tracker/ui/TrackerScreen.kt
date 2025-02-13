@@ -2,12 +2,13 @@ package org.company.app.tracker.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -56,7 +57,6 @@ import org.company.app.organisation.ui.BustleSpotAppBar
 import org.company.app.timer.TrackerViewModel
 import org.jetbrains.compose.resources.imageResource
 import org.jetbrains.compose.resources.painterResource
-import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 
@@ -140,7 +140,7 @@ fun TrackerScreen(
         Column(
             modifier = modifier
                 .fillMaxSize()
-                .padding(paddingValues),
+                .padding(paddingValues).verticalScroll(state = rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -156,9 +156,11 @@ fun TrackerScreen(
                         }
                     }
                 }
+
                 is UiEvent.Loading -> {
                     LoadingScreen()
                 }
+
                 is UiEvent.Success -> {
                     // You might show a success message or simply do nothing.
                     println("Success")
@@ -224,22 +226,22 @@ fun TrackerScreen(
                 lastImageTakenTime = secondsToTime(screenShotTakenTime),
                 imageBitmap = screenShotState
             )
-
-            Box {
-                Row {
-                    TextField(
-                        value = customeTimeForIdleTime.toString(),
-                        onValueChange = {
-                            if (it.isNotEmpty()) {
-                                trackerViewModel.addCustomTimeForIdleTime(it.toInt())
-                            } else {
-                                trackerViewModel.addCustomTimeForIdleTime(10)
+            /*
+                        Box {
+                            Row {
+                                TextField(
+                                    value = customeTimeForIdleTime.toString(),
+                                    onValueChange = {
+                                        if (it.isNotEmpty()) {
+                                            trackerViewModel.addCustomTimeForIdleTime(it.toInt())
+                                        } else {
+                                            trackerViewModel.addCustomTimeForIdleTime(10)
+                                        }
+                                    },
+                                    label = { Text("Custom Time") },
+                                )
                             }
-                        },
-                        label = { Text("Custom Time") },
-                    )
-                }
-            }
+                        }*/
 
             if (showIdleDialog) {
                 CustomAlertDialog(
@@ -341,10 +343,11 @@ fun DropDownSelectionList(
     ) {
         TextField(
             value = inputText,
-            onValueChange = { onSearchText(it)
-                            isMenuExpanded = true
+            onValueChange = {
+                onSearchText(it)
+                isMenuExpanded = true
                 hasNotifiedOnOpen = true
-                            },
+            },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = {
@@ -361,7 +364,7 @@ fun DropDownSelectionList(
                         isMenuExpanded = false
                         hasNotifiedOnOpen = false
                     }
-                  println("icon clicked")
+                    println("icon clicked")
                 }) {
                     Icon(
                         painter = painterResource(
@@ -416,6 +419,7 @@ fun DropDownSelectionList(
                             }
                         )
                     }
+
                     is TaskData -> {
                         DropdownMenuItem(
                             text = {
@@ -521,7 +525,7 @@ fun TimerSessionSection(
                 fontSize = 15.sp
             )
         }
-        Row(
+        /*Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
@@ -554,7 +558,7 @@ fun TimerSessionSection(
                 color = Color.Black,
                 fontSize = 15.sp
             )
-        }
+        }*/
     }
 }
 
@@ -570,7 +574,7 @@ fun ScreenShotSection(
             .padding(top = 16.dp)
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
