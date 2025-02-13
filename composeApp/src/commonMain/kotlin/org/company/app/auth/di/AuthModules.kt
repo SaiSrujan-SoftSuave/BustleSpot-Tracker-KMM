@@ -8,7 +8,6 @@ import org.company.app.auth.signin.presentation.LoginViewModel
 import org.company.app.auth.signup.data.SignUpRepository
 import org.company.app.auth.signup.data.SignUpRepositoryImpl
 import org.company.app.di.provideHttpClient
-import org.company.app.timer.TrackerViewModel
 import org.company.app.tracker.ui.HomeViewModelForTimer
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.viewModelOf
@@ -25,7 +24,6 @@ val sharedModules = module {
 //    viewModel { TrackerViewModel(get()) }
     viewModelOf(::LoginViewModel)
     viewModelOf(::HomeViewModelForTimer)
-    viewModelOf(::TrackerViewModel)
 
 
     single {

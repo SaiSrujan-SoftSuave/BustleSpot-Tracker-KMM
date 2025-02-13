@@ -57,7 +57,6 @@ import org.company.app.network.models.response.DisplayItem
 import org.company.app.network.models.response.Project
 import org.company.app.network.models.response.TaskData
 import org.company.app.organisation.ui.BustleSpotAppBar
-import org.company.app.timer.TrackerViewModel
 import org.jetbrains.compose.resources.imageResource
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -72,19 +71,16 @@ fun TrackerScreen(
     onFocusReceived: () -> Unit = {}
 ) {
     val homeViewModel = koinViewModel<HomeViewModel>()
-    val trackerViewModel = koinViewModel<TrackerViewModel>()
 
-    // Tracker timer and other states from trackerViewModel remain unchanged.
-    val trackerTimer by trackerViewModel.trackerTime.collectAsState()
-    val isTrackerRunning by trackerViewModel.isTrackerRunning.collectAsState()
-    val idleTime by trackerViewModel.idealTime.collectAsState()
-    val isIdleRunning by trackerViewModel.isIdealTimerRunning.collectAsState()
-    val screenShotState by trackerViewModel.screenShotState.collectAsState()
-    val keyCount by trackerViewModel.keyboradKeyEvents.collectAsState()
-    val mouseCount by trackerViewModel.mouseKeyEvents.collectAsState()
-    val screenShotTakenTime by trackerViewModel.screenShotTakenTime.collectAsState()
-    val customeTimeForIdleTime by trackerViewModel.customeTimeForIdleTime.collectAsState()
-    val numberOfScreenshot by trackerViewModel.numberOfScreenshot.collectAsState()
+    // Tracker timer and other states from homeViewModel remain unchanged.
+    val trackerTimer by homeViewModel.trackerTime.collectAsState()
+    val isTrackerRunning by homeViewModel.isTrackerRunning.collectAsState()
+    val idleTime by homeViewModel.idealTime.collectAsState()
+    val screenShotState by homeViewModel.screenShotState.collectAsState()
+    val keyCount by homeViewModel.keyboradKeyEvents.collectAsState()
+    val mouseCount by homeViewModel.mouseKeyEvents.collectAsState()
+    val screenShotTakenTime by homeViewModel.screenShotTakenTime.collectAsState()
+    val customeTimeForIdleTime by homeViewModel.customeTimeForIdleTime.collectAsState()
 
     // Collect the consolidated drop-down states from HomeViewModel.
     val projectDropDownState by homeViewModel.projectDropDownState.collectAsState()
@@ -109,8 +105,8 @@ fun TrackerScreen(
         if (idleTime > customeTimeForIdleTime && !showIdleDialog) {
             onFocusReceived.invoke()
             showIdleDialog = true
-            trackerViewModel.stopTimer()
-            trackerViewModel.updateTrackerTimer()
+            homeViewModel.stopTrackerTimer()
+            homeViewModel.updateTrackerTimer()
         }
     }
 
@@ -229,7 +225,7 @@ fun TrackerScreen(
 
                     TimerSessionSection(
                         trackerTimer = trackerTimer,
-                        trackerViewModel = trackerViewModel,
+                        homeViewModel = homeViewModel,
                         keyCount = keyCount,
                         mouseCount = mouseCount,
                         idleTime = totalIdleTime,
@@ -252,9 +248,9 @@ fun TrackerScreen(
                                     value = customeTimeForIdleTime.toString(),
                                     onValueChange = {
                                         if (it.isNotEmpty()) {
-                                            trackerViewModel.addCustomTimeForIdleTime(it.toInt())
+                                            homeViewModel.addCustomTimeForIdleTime(it.toInt())
                                         } else {
-                                            trackerViewModel.addCustomTimeForIdleTime(10)
+                                            homeViewModel.addCustomTimeForIdleTime(10)
                                         }
                                     },
                                     label = { Text("Custom Time") },
@@ -271,8 +267,8 @@ fun TrackerScreen(
                             onClick = {
                                 showIdleDialog = false
                                 totalIdleTime += idleTime
-                                trackerViewModel.resetIdleTimer()
-                                trackerViewModel.resumeTracker()
+                                homeViewModel.resetIdleTimer()
+                                homeViewModel.resumeTrackerTimer()
                             },
                             colors = ButtonColors(
                                 containerColor = Color.Red,
@@ -293,8 +289,8 @@ fun TrackerScreen(
                         TextButton(
                             onClick = {
                                 showIdleDialog = false
-                                trackerViewModel.resetIdleTimer()
-                                trackerViewModel.resumeTracker()
+                                homeViewModel.resetIdleTimer()
+                                homeViewModel.resumeTrackerTimer()
                             },
                             colors = ButtonColors(
                                 containerColor = Color.White,
@@ -323,7 +319,7 @@ fun TrackerScreen(
                     TextButton(
                         onClick = {
                             isExitClicked = false
-                            trackerViewModel.stopTimer()
+                            homeViewModel.stopTrackerTimer()
                             navController.popBackStack()
                         },
                         colors = ButtonColors(
@@ -524,7 +520,7 @@ fun TimerSessionSection(
     modifier: Modifier = Modifier,
     taskName: String = "task",
     trackerTimer: Int,
-    trackerViewModel: TrackerViewModel,
+    homeViewModel: HomeViewModel,
     idleTime: Int,
     mouseCount: Int,
     keyCount: Int,
@@ -566,16 +562,16 @@ fun TimerSessionSection(
                     onClick = {
                         isPlaying = !isPlaying
                         if (isPlaying) {
-                            if (isTrackerRunning || trackerViewModel.trackerTime.value != 0) {
-                                trackerViewModel.resumeTracker()
+                            if (isTrackerRunning || homeViewModel.trackerTime.value != 0) {
+                                homeViewModel.resumeTrackerTimer()
                             } else {
-                                trackerViewModel.startTimer()
+                                homeViewModel.startTrackerTimer()
                             }
                         } else {
                             if (isTrackerRunning) {
-                                trackerViewModel.stopTimer()
+                                homeViewModel.stopTrackerTimer()
                             } else {
-                                trackerViewModel.resetTimer()
+                                homeViewModel.resetTrackerTimer()
                             }
                         }
                     }

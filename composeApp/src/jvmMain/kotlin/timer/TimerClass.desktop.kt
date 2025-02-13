@@ -1,9 +1,8 @@
 package org.company.app.timer
 
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import GlobalEventListener
+import androidx.compose.ui.graphics.ImageBitmap
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -13,7 +12,7 @@ import java.util.TimerTask
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.random.Random
 
-actual class TrackerViewModel : ViewModel() {
+actual class TrackerModule actual constructor(private val viewModelScope: CoroutineScope) {
     actual var trackerTime: MutableStateFlow<Int> = MutableStateFlow(0)
     actual var isTrackerRunning: MutableStateFlow<Boolean> = MutableStateFlow(false)
     actual var isIdealTimerRunning: MutableStateFlow<Boolean> = MutableStateFlow(false)
@@ -211,8 +210,8 @@ actual class TrackerViewModel : ViewModel() {
         customeTimeForIdleTime.value = time
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        timer.cancel()
-    }
+//    override fun onCleared() {
+//        super.onCleared()
+//        timer.cancel()
+//    }
 }

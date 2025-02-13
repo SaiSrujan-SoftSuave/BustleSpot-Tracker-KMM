@@ -2,10 +2,13 @@ package org.company.app.timer
 
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-actual class TrackerViewModel actual constructor() : ViewModel() {
+actual class TrackerModule actual constructor(
+    viewModelScope: CoroutineScope
+) {
     actual var trackerTime: MutableStateFlow<Int>
         get() = TODO("Not yet implemented")
         set(value) {}

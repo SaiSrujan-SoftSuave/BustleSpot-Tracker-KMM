@@ -1,12 +1,14 @@
 package org.company.app.timer
 
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 
-expect class TrackerViewModel() : ViewModel {
+expect class TrackerModule(
+    viewModelScope: CoroutineScope
+) {
     var trackerTime: MutableStateFlow<Int>
     var idealTime: MutableStateFlow<Int>
     var isTrackerRunning: MutableStateFlow<Boolean>
