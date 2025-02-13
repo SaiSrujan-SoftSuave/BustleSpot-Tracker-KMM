@@ -1,24 +1,21 @@
 package org.company.app.tracker.ui
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -55,6 +52,7 @@ import org.company.app.auth.utils.CustomAlertDialog
 import org.company.app.auth.utils.LoadingScreen
 import org.company.app.auth.utils.UiEvent
 import org.company.app.auth.utils.secondsToTime
+import org.company.app.auth.utils.secondsToTimeFormat
 import org.company.app.network.models.response.DisplayItem
 import org.company.app.network.models.response.Project
 import org.company.app.network.models.response.TaskData
@@ -180,7 +178,7 @@ fun TrackerScreen(
                             )
                         },
                         modifier = Modifier
-                            .fillMaxWidth(0.8f)
+                            .fillMaxWidth(0.85f)
                             .padding(vertical = 8.dp),
                         error = projectDropDownState.errorMessage,
                         onDropDownClick = {
@@ -188,7 +186,11 @@ fun TrackerScreen(
                         },
                         inputText = projectDropDownState.inputText,
                         onSearchText = { searchText ->
-                            homeViewModel.handleDropDownEvents(DropDownEvents.OnProjectSearch(searchText))
+                            homeViewModel.handleDropDownEvents(
+                                DropDownEvents.OnProjectSearch(
+                                    searchText
+                                )
+                            )
                         },
                         onNoOptionClick = {
                             homeViewModel.handleDropDownEvents(DropDownEvents.OnProjectSearch(""))
@@ -205,7 +207,7 @@ fun TrackerScreen(
                             )
                         },
                         modifier = Modifier
-                            .fillMaxWidth(0.8f)
+                            .fillMaxWidth(0.85f)
                             .padding(vertical = 8.dp),
                         error = taskDropDownState.errorMessage,
                         isEnabled = taskDropDownState.dropDownList.isNotEmpty(),
@@ -214,7 +216,11 @@ fun TrackerScreen(
                         },
                         inputText = taskDropDownState.inputText,
                         onSearchText = { searchText ->
-                            homeViewModel.handleDropDownEvents(DropDownEvents.OnTaskSearch(searchText))
+                            homeViewModel.handleDropDownEvents(
+                                DropDownEvents.OnTaskSearch(
+                                    searchText
+                                )
+                            )
                         },
                         onNoOptionClick = {
                             homeViewModel.handleDropDownEvents(DropDownEvents.OnTaskSearch(""))
@@ -258,7 +264,7 @@ fun TrackerScreen(
 
             if (showIdleDialog) {
                 CustomAlertDialog(
-                    title = "Idle time",
+                    title = "IdleTime",
                     text = "You are idle for ${secondsToTime(idleTime)}. Do you want to add idle time to the session?",
                     confirmButton = {
                         TextButton(
@@ -370,7 +376,7 @@ fun DropDownSelectionList(
     onItemClick: (DisplayItem) -> Unit,
     isEnabled: Boolean = true,
     onDropDownClick: () -> Unit = {},
-    onNoOptionClick:() -> Unit = {},
+    onNoOptionClick: () -> Unit = {},
     error: String? = null,
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
@@ -459,11 +465,10 @@ fun DropDownSelectionList(
                 hasNotifiedOnOpen = false
                 println("dismiss called")
             },
-            modifier = Modifier.fillMaxWidth(0.8f),
-            properties = PopupProperties(focusable = false),
-            containerColor = Color.White,
+            modifier = Modifier.fillMaxWidth(0.85f),
+            properties = PopupProperties(focusable = false)
         ) {
-            if(filteredList.isNotEmpty()) {
+            if (filteredList.isNotEmpty()) {
                 filteredList.forEach { item ->
                     when (item) {
                         is Project -> {
@@ -494,11 +499,11 @@ fun DropDownSelectionList(
                         }
                     }
                 }
-            }else{
+            } else {
                 DropdownMenuItem(
                     text = {
                         Text(
-                            text =  "No Options",
+                            text = "No Options",
                             modifier = Modifier.fillMaxWidth(),
                             color = Color.Gray
                         )
@@ -527,8 +532,8 @@ fun TimerSessionSection(
 ) {
     var isPlaying by remember { mutableStateOf(false) }
     Column(
-        modifier = modifier.fillMaxWidth(0.8f),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        modifier = modifier.fillMaxWidth(0.85f),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -540,32 +545,6 @@ fun TimerSessionSection(
                 color = Color.Black,
                 fontWeight = FontWeight.Bold
             )
-            IconButton(
-                modifier = Modifier.padding(top = 8.dp),
-                onClick = {
-                    isPlaying = !isPlaying
-                    if (isPlaying) {
-                        if (isTrackerRunning || trackerViewModel.trackerTime.value != 0) {
-                            trackerViewModel.resumeTracker()
-                        } else {
-                            trackerViewModel.startTimer()
-                        }
-                    } else {
-                        if (isTrackerRunning) {
-                            trackerViewModel.stopTimer()
-                        } else {
-                            trackerViewModel.resetTimer()
-                        }
-                    }
-                }
-            ) {
-                Icon(
-                    painter = painterResource(
-                        if (isPlaying) Res.drawable.ic_pause_circle else Res.drawable.ic_play_arrow
-                    ),
-                    contentDescription = if (isPlaying) "Pause" else "Play"
-                )
-            }
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -578,63 +557,93 @@ fun TimerSessionSection(
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold
             )
-            Text(
-                text = secondsToTime(trackerTimer),
-                color = Color.Black,
-                fontSize = 15.sp
-            )
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                IconButton(
+                    modifier = Modifier,
+                    onClick = {
+                        isPlaying = !isPlaying
+                        if (isPlaying) {
+                            if (isTrackerRunning || trackerViewModel.trackerTime.value != 0) {
+                                trackerViewModel.resumeTracker()
+                            } else {
+                                trackerViewModel.startTimer()
+                            }
+                        } else {
+                            if (isTrackerRunning) {
+                                trackerViewModel.stopTimer()
+                            } else {
+                                trackerViewModel.resetTimer()
+                            }
+                        }
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(
+                            if (isPlaying) Res.drawable.ic_pause_circle else Res.drawable.ic_play_arrow
+                        ),
+                        contentDescription = if (isPlaying) "Pause" else "Play",
+                        modifier = Modifier.size(24.dp),
+                    )
+                }
+                Text(
+                    text = secondsToTime(trackerTimer),
+                    color = Color.Black,
+                )
+            }
         }
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Idle Time",
+                text = "IdleTime",
                 color = Color.Red,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = secondsToTime(idleTime),
+                text = secondsToTimeFormat(idleTime),
                 color = Color.Black,
-                fontSize = 15.sp
             )
         }
-/*        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Key Events",
-                color = Color.Red,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "$keyCount",
-                color = Color.Black,
-                fontSize = 15.sp
-            )
-        }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Mouse Events",
-                color = Color.Red,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "$mouseCount",
-                color = Color.Black,
-                fontSize = 15.sp
-            )
-        }*/
+        /*        Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Key Events",
+                        color = Color.Red,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "$keyCount",
+                        color = Color.Black,
+                        fontSize = 15.sp
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Mouse Events",
+                        color = Color.Red,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "$mouseCount",
+                        color = Color.Black,
+                        fontSize = 15.sp
+                    )
+                }*/
     }
 }
 
@@ -646,7 +655,7 @@ fun ScreenShotSection(
 ) {
     Column(
         modifier = modifier
-            .fillMaxWidth(0.8f)
+            .fillMaxWidth(0.85f)
             .padding(top = 16.dp)
     ) {
         Row(
