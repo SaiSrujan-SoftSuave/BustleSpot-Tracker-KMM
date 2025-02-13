@@ -4,17 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -22,33 +12,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardColors
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarColors
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -57,16 +27,15 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.navigation.NavController
 import bustlespot.composeapp.generated.resources.Res
 import bustlespot.composeapp.generated.resources.compose_multiplatform
-import com.russhwolf.settings.Settings
+import bustlespot.composeapp.generated.resources.ic_logout
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import org.company.app.SessionManager
 import org.company.app.auth.navigation.Home
+import org.company.app.auth.utils.CustomAlertDialog
 import org.company.app.auth.utils.LoadingScreen
 import org.company.app.auth.utils.UiEvent
-import org.company.app.mainnavigation.Graph
 import org.company.app.network.models.response.Organisation
-import kotlinx.coroutines.launch
-import org.company.app.SessionManager
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -74,7 +43,6 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 
-data class Organization(val name: String, val logoResource: DrawableResource)
 
 @Composable
 fun OrganisationScreen(
@@ -89,6 +57,9 @@ fun OrganisationScreen(
     val coroutineScope = rememberCoroutineScope()
     val logOutEvent by organisationViewModel.logOutEvent.collectAsState()
     val sessionManager: SessionManager = koinInject()
+
+    val showLogOutDialog by organisationViewModel.showLogOutDialog.collectAsState()
+
     coroutineScope.launch {
         sessionManager.flowAccessToken.collectLatest { token ->
             sessionManager.setToken(token)
@@ -108,13 +79,57 @@ fun OrganisationScreen(
                 iconUserName = "Test 1",
                 isLogOutEnabled = true,
                 onLogOutClick = {
-                    organisationViewModel.performLogOut()
+                    organisationViewModel.showLogOutDialog()
                 }
             )
         },
         containerColor = Color.White,
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
+            if (showLogOutDialog) {
+                CustomAlertDialog(
+                    title = "Log Out",
+                    text = "Are you sure you want to log out?",
+                    dismissButton = {
+                        Button(
+                            onClick = {
+                                organisationViewModel.logOutDisMissed()
+                            }, colors = ButtonColors(
+                                containerColor = Color.White,
+                                contentColor = Color.Red,
+                                disabledContainerColor = Color.Gray,
+                                disabledContentColor = Color.Black
+                            ),
+                            shape = RoundedCornerShape(5.dp),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 5.dp,
+                                focusedElevation = 7.dp,
+                            )
+                        ) {
+                            Text("Cancel")
+                        }
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                organisationViewModel.performLogOut()
+                            }, colors = ButtonColors(
+                                containerColor = Color.Red,
+                                contentColor = Color.White,
+                                disabledContainerColor = Color.Gray,
+                                disabledContentColor = Color.Black
+                            ),
+                            shape = RoundedCornerShape(5.dp),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 5.dp,
+                                focusedElevation = 7.dp,
+                            )
+                        ) {
+                            Text("Logout")
+                        }
+                    }
+                )
+            }
         when (uiEvent) {
             is UiEvent.Success -> {
                 Box(
@@ -122,6 +137,7 @@ fun OrganisationScreen(
                         .fillMaxSize()
                         .padding(paddingValues)
                 ) {
+
                     OrganizationList(
                         organizations = organisationList?.listOfOrganisations,
                         navController = navController
@@ -315,8 +331,6 @@ fun BustleSpotAppBar(
     isLogOutEnabled: Boolean = false,
     onLogOutClick: () -> Unit = {}
 ) {
-
-
     CenterAlignedTopAppBar(
         title = title,
         modifier = modifier.fillMaxWidth(),
@@ -335,17 +349,26 @@ fun BustleSpotAppBar(
             }
         },
         actions = {
+            if(isLogOutEnabled){
+                IconButton(
+                    onClick = {
+                        onLogOutClick()
+                    }
+                ){
+                    Icon(
+                        modifier = Modifier.weight(.8f),
+                        painter = painterResource(Res.drawable.ic_logout),
+                        contentDescription = "logout"
+                    )
+                }
+            }
             if (isAppBarIconEnabled) {
                 Row(
                     modifier = Modifier.padding(end = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     AppBarIcon(
-                        username = iconUserName,
-                        isLogOutEnabled = isLogOutEnabled,
-                        onLogOutClick = {
-                            onLogOutClick()
-                        })
+                        username = iconUserName)
                 }
             }
         },
@@ -364,19 +387,14 @@ fun BustleSpotAppBar(
 fun AppBarIcon(
     modifier: Modifier = Modifier,
     username: String,
-    onLogOutClick: () -> Unit,
-    isLogOutEnabled: Boolean = true
 ) {
-    var isMenuExpanded by remember { mutableStateOf(false) }
     val showWord = username.split(" ").map { it[0].uppercase() }.joinToString("")
     Box(
         modifier = modifier.size(40.dp).border(
             width = 1.dp,
             shape = CircleShape,
             color = Color.Red,
-        ).background(color = Color.Red.copy(alpha = .3f), shape = CircleShape).clickable {
-            isMenuExpanded = !isMenuExpanded
-        },
+        ).background(color = Color.Red.copy(alpha = .3f), shape = CircleShape),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -386,31 +404,6 @@ fun AppBarIcon(
             overflow = TextOverflow.Ellipsis,
             fontSize = 20.sp,
             fontWeight = FontWeight.Light
-        )
-    }
-
-    DropdownMenu(
-        expanded = isMenuExpanded && isLogOutEnabled,
-        onDismissRequest = { isMenuExpanded = false },
-        modifier = Modifier.fillMaxWidth(0.5f),
-        properties = PopupProperties(focusable = false)
-    ) {
-        DropdownMenuItem(
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                    contentDescription = " TODO()",
-                )
-            },
-            text = {
-                Text(
-                    text = "Log Out",
-                )
-            },
-            onClick = {
-                isMenuExpanded = false
-                onLogOutClick()
-            }
         )
     }
 }

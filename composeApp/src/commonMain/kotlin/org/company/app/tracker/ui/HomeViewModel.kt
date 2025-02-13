@@ -192,3 +192,7 @@ data class DropDownState(
     val inputText: String = "",
     val dropDownList: List<DisplayItem> = emptyList(),
 )
+
+sealed class TimerEvents{
+    data object onTimerStart: TimerEvents()
+}

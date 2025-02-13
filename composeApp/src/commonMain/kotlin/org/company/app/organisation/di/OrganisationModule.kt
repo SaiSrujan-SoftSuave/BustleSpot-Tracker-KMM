@@ -9,7 +9,7 @@ import org.koin.dsl.module
 
 val organisationModule = module {
     single<OrganisationRepository> {
-        OrganisationRepositoryImpl(get(),get(),get())
+        OrganisationRepositoryImpl(get(),get())
     }
 
     viewModelOf(::OrganisationViewModel)

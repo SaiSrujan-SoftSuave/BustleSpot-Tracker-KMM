@@ -37,7 +37,8 @@ class OrganisationViewModel(
     private val _uiEvent: MutableStateFlow<UiEvent<GetAllOrganisations>> = MutableStateFlow(UiEvent.Loading)
     val uiEvent: StateFlow<UiEvent<GetAllOrganisations>> = _uiEvent.asStateFlow()
 
-
+    private val _showLogOutDialog :MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val showLogOutDialog : StateFlow<Boolean> = _showLogOutDialog.asStateFlow()
     private fun getAllOrganisation() {
         viewModelScope.launch {
 
@@ -62,6 +63,12 @@ class OrganisationViewModel(
         }
     }
 
+    fun logOutDisMissed(){
+        _showLogOutDialog.value = false
+    }
+    fun showLogOutDialog(){
+        _showLogOutDialog.value = true
+    }
     fun performLogOut(){
         viewModelScope.launch {
             signOutUseCase.invoke().collect { result ->
@@ -75,6 +82,7 @@ class OrganisationViewModel(
                     }
 
                     is Result.Success -> {
+                        _showLogOutDialog.value = false
                        val data = result.data
                         _logOutEvent.value = UiEvent.Success(data)
                         println("Success: ${result.data}")
