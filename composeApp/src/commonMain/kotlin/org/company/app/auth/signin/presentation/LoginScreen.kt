@@ -3,6 +3,8 @@ package org.company.app.auth.signin.presentation
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -29,30 +31,33 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import compose_multiplatform_app.composeapp.generated.resources.Res
-import compose_multiplatform_app.composeapp.generated.resources.ic_bustlespot
-import compose_multiplatform_app.composeapp.generated.resources.ic_password_visible
+import bustlespot.composeapp.generated.resources.Res
+import bustlespot.composeapp.generated.resources.ic_bustlespot
+import bustlespot.composeapp.generated.resources.ic_password_visibility_off
+import bustlespot.composeapp.generated.resources.ic_password_visible
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.company.app.MainViewModel
 import org.company.app.SessionManager
 import org.company.app.auth.navigation.AuthScreen
 import org.company.app.auth.navigation.Home
-import org.company.app.auth.signin.data.SignInResponse
 import org.company.app.auth.utils.LoadingScreen
 import org.company.app.auth.utils.UiEvent
-import org.company.app.mainnavigation.Graph
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
@@ -69,6 +74,9 @@ fun LoginScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val sessionManager: SessionManager = koinInject()
     val coroutineScope = rememberCoroutineScope()
+    var passwordVisibility by remember {
+        mutableStateOf(false)
+    }
     coroutineScope.launch {
         sessionManager.flowAccessToken.collectLatest { token ->
             sessionManager.setToken(token)
@@ -155,18 +163,24 @@ fun LoginScreen(
                             unfocusedContainerColor = Color.Transparent,
                             focusedContainerColor = Color.Transparent,
                             errorContainerColor = Color.Transparent,
-                            unfocusedIndicatorColor = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
-                            errorIndicatorColor = androidx.compose.material3.MaterialTheme.colorScheme.error,
-                            focusedIndicatorColor = androidx.compose.material3.MaterialTheme.colorScheme.onBackground,
+                            unfocusedIndicatorColor = MaterialTheme.colorScheme.onBackground,
+                            errorIndicatorColor = MaterialTheme.colorScheme.error,
+                            focusedIndicatorColor = MaterialTheme.colorScheme.onBackground,
                         ),
                         placeholder = { Text("Password", modifier = Modifier.alpha(0.5f)) },
-                        modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth(),
                         maxLines = 1,
                         trailingIcon = {
                             Icon(
-                                painter = painterResource(Res.drawable.ic_password_visible),
-                                contentDescription = "Email Icon",
-                                modifier = Modifier.size(24.dp)
+                                painter = if (!passwordVisibility) painterResource(Res.drawable.ic_password_visible) else painterResource(
+                                    Res.drawable.ic_password_visibility_off
+                                ),
+                                contentDescription = "Toggle Password Visibility",
+                                modifier = Modifier.clickable {
+                                    passwordVisibility = !passwordVisibility
+                                }
                             )
                         },
                         isError = passwordState.value.error.isNotEmpty(),
@@ -181,7 +195,8 @@ fun LoginScreen(
                                     color = androidx.compose.material3.MaterialTheme.colorScheme.error
                                 )
                             }
-                        }
+                        },
+                        visualTransformation = if (passwordVisibility) androidx.compose.ui.text.input.VisualTransformation.None else androidx.compose.ui.text.input.PasswordVisualTransformation(),
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -201,13 +216,25 @@ fun LoginScreen(
                         onClick = {
                             loginViewModel.onEvent(LoginEvent.SubmitLogin)
                         },
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .focusable(enabled = true)
+                            .then(
+                                if (emailState.value.isValid && passwordState.value.isValid) {
+                                    Modifier.pointerHoverIcon(PointerIcon.Hand)
+                                } else {
+                                    Modifier
+                                }
+
+                            ),
                         shape = RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.buttonColors().copy(
                             containerColor = Color.Red,
                             contentColor = Color.White
                         ),
-                        enabled = emailState.value.isValid && passwordState.value.isValid
+                        enabled = emailState.value.isValid && passwordState.value.isValid,
+                        interactionSource = MutableInteractionSource()
                     ) {
                         Text(
                             text = "Login",

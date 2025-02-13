@@ -55,9 +55,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
 import androidx.navigation.NavController
+import bustlespot.composeapp.generated.resources.Res
+import bustlespot.composeapp.generated.resources.compose_multiplatform
 import com.russhwolf.settings.Settings
-import compose_multiplatform_app.composeapp.generated.resources.Res
-import compose_multiplatform_app.composeapp.generated.resources.compose_multiplatform
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import org.company.app.auth.navigation.Home

@@ -15,7 +15,7 @@ fun main() = application {
     })
     initKoin()
     Window(
-        title = "Compose Multiplatform App",
+        title = "Bustlespot",
         state = rememberWindowState(size = DpSize(width = 420.dp, height = 800.dp)),
         onCloseRequest = ::exitApplication,
     ) {

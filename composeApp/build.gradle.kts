@@ -129,7 +129,7 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "Compose Multiplatform App"
+            packageName = "Bustlespot"
             packageVersion = "1.0.0"
 
             linux {

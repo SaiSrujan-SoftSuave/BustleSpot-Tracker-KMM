@@ -1,4 +1,4 @@
-rootProject.name = "Compose-Multiplatform-App"
+rootProject.name = "Bustlespot"
 
 pluginManagement {
     repositories {
